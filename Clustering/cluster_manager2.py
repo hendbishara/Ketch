@@ -2,6 +2,10 @@ import networkx as nx
 from geopy.distance import geodesic
 import db_methods
 import matplotlib.pyplot as plt
+import folium
+import webbrowser
+import os
+import numpy as np
 
 class Cluster:
     
@@ -72,3 +76,116 @@ class ClusterManager:
 
     def get_clusters(self):
         return self.clusters
+
+
+    def create_map(self):
+        if not self.clusters:
+            print("No clusters available to create a map.")
+            return
+
+        # Center the map around the first cluster's centroid
+        first_cluster = self.clusters[0]
+        map_center = first_cluster.centroid
+        map_obj = folium.Map(location=map_center, zoom_start=12)
+
+        # Iterate through each cluster to add markers and lines
+        for cluster in self.clusters:
+            if cluster.centroid:
+                # ✅ Add a red circle marker for the cluster centroid
+                folium.CircleMarker(
+                    location=cluster.centroid,
+                    radius=10,  # Bigger for better visibility
+                    color='red',
+                    fill=True,
+                    fill_color='red',
+                    fill_opacity=0.8,
+                    popup=f"Cluster ID: {cluster.cluster_id}\nTotal Capacity: {cluster.total_capacity}"
+                ).add_to(map_obj)
+
+            # ✅ Add green markers for orders and draw lines to the centroid
+            for order_id in cluster.orders:
+                # Fetch user ID from the order
+                user_id = db_methods.get_user_id_from_order(order_id)
+                if not user_id:
+                    continue
+
+                # Fetch user coordinates
+                user_coord = db_methods.get_user_coordinates(user_id)
+                if not user_coord:
+                    continue
+
+                # ✅ Add green marker for the user's address
+                folium.Marker(
+                    location=user_coord,  
+                    popup=f"Order ID: {order_id}\nCoordinates: {user_coord}",
+                    icon=folium.Icon(color='green', icon='cloud', prefix='fa')
+                ).add_to(map_obj)
+
+                # ✅ Draw a line between the order and the cluster centroid
+                folium.PolyLine(
+                    [user_coord, cluster.centroid],  # Order → Centroid
+                    color="blue",
+                    weight=2.5,
+                    opacity=0.8
+                ).add_to(map_obj)
+
+        # ✅ Save and open the map
+        map_path = os.path.join(os.getcwd(), "cluster_map.html")
+        map_obj.save(map_path)
+        print(f"Map has been saved as '{map_path}'.")
+
+        if os.path.exists(map_path):
+            print(f"Opening map at {map_path}")
+            webbrowser.open(f'file://{map_path}', new=2)
+        else:
+            print(f"Error: The map file was not created at {map_path}.")
+
+
+'''
+    def create_map(self):
+        # Create a base map centered around a central location (can be the average of all centroids)
+        if not self.clusters:
+            print("No clusters available to create a map.")
+            return
+
+        # Set initial location based on the first cluster's centroid
+        first_cluster = self.clusters[0]
+        map_center = first_cluster.centroid
+        map_obj = folium.Map(location=map_center, zoom_start=12)
+
+        # Add markers for individual orders and clusters
+        for cluster in self.clusters:
+            # Plot centroid of the cluster (with a different color)
+            folium.Marker(
+                location=cluster.centroid,
+                popup=f"Cluster ID: {cluster.cluster_id}<br>Total Capacity: {cluster.total_capacity}",
+                icon=folium.Icon(color='blue', icon='info-sign')
+            ).add_to(map_obj)
+
+            # Plot all orders within the cluster
+            for order_id in cluster.orders:
+                # For each order, retrieve the coordinates and display
+                user_coordinates = db_methods.get_user_coordinates(order_id)  # You can update this line to fetch the right coordinates
+                if user_coordinates:
+                    folium.Marker(
+                        location=user_coordinates,
+                        popup=f"Order ID: {order_id}",
+                        icon=folium.Icon(color='red', icon='cloud')
+                    ).add_to(map_obj)
+
+            map_path = os.path.join(os.getcwd(), "cluster_map.html")
+
+            # Save the map
+            map_obj.save(map_path)
+            print(f"Map has been saved as '{map_path}'.")
+
+            # Check if the file exists before trying to open
+            if os.path.exists(map_path):
+                print(f"Opening map at {map_path}")
+                webbrowser.open(f'file://{map_path}', new=2)
+            else:
+                print(f"Error: The map file was not created at {map_path}.")
+'''
+
+
+
