@@ -1,6 +1,7 @@
 import mysql.connector
 from geopy.geocoders import Nominatim
 from datetime import datetime
+import random
 
 # Initialize Geolocator
 geolocator = Nominatim(user_agent="geo_clustering")
@@ -62,6 +63,26 @@ def add_new_order(order_id, user_id, order_details, latitude, longitude):
     db.close()
 
     print(f"Order {order_id} for user {user_id} added to the database.")
+
+
+def get_order_capacity(order_id):
+    """ Fetches the capacity of an order from the database """
+    connection = get_connection()  # Replace with actual DB connection
+
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute("SELECT order_details FROM orders WHERE id = %s", (order_id,))
+        result = cursor.fetchone()
+        if result:
+            return int(result[0])  # Convert to integer capacity
+        return None  # Default capacity if not found
+    except mysql.connector.Error as e:
+        print(f"Database error: {e}")
+        return None
+    finally:
+        cursor.close()
+        connection.close()
 
 def get_all_users():
     db = get_connection()
@@ -176,6 +197,29 @@ def get_user_coordinates(user_id):
     if result:
         return result  # Return the latitude and longitude as a tuple
     return None  # Return None if no coordinates are found for that user
+
+def update_order_details_with_random_values():
+    """ Updates all order_details values with a random number between 0 and 15 """
+    connection = get_connection()  # Replace with actual DB connection
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute("SELECT id FROM orders")  # Get all order IDs
+        orders = cursor.fetchall()
+
+        for (order_id,) in orders:
+            random_value = random.randint(1, 6)  # Generate a random number
+            cursor.execute("UPDATE orders SET order_details = %s WHERE id = %s", (random_value, order_id))
+
+        connection.commit()  # Save changes
+        print("Updated all order_details with random values.")
+
+    except mysql.connector.Error as e:
+        print(f"Database error: {e}")
+    
+    finally:
+        cursor.close()
+        connection.close()
 
 
 '''
