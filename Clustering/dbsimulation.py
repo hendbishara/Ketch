@@ -10,31 +10,78 @@ users = [
     ("Alice Johnson", "alice.johnson@example.com", "Wall Street, New York, USA"),
     ("Bob Brown", "bob.brown@example.com", "Brooklyn Bridge, New York, USA"),
     ("Charlie Davis", "charlie.davis@example.com", "Central Park, New York, USA"),
-    
-    # 🏙️ Additional New York users (within 2.5 km of existing points)
-    ("Michael Scott", "michael.scott@example.com", "Madison Square Garden, New York, USA"),  # Near Times Square
-    ("Pam Beesly", "pam.beesly@example.com", "Bryant Park, New York, USA"),  # Near Empire State Building
-    ("Jim Halpert", "jim.halpert@example.com", "One World Trade Center, New York, USA"),  # Near Wall Street
-    ("Dwight Schrute", "dwight.schrute@example.com", "South Street Seaport, New York, USA"),  # Near Brooklyn Bridge
-    ("Kevin Malone", "kevin.malone@example.com", "The Met Museum, New York, USA"),  # Near Central Park
-    ("Oscar Martinez", "oscar.martinez@example.com", "Flatiron Building, New York, USA"),  # Near Madison Square Garden
-    ("Angela Martin", "angela.martin@example.com", "Battery Park, New York, USA"),  # Near Wall Street
-    ("Ryan Howard", "ryan.howard@example.com", "Columbus Circle, New York, USA"),  # Near Central Park
-    ("Kelly Kapoor", "kelly.kapoor@example.com", "Grand Central Terminal, New York, USA"),  # Near Empire State Building
-    ("Toby Flenderson", "toby.flenderson@example.com", "Hudson Yards, New York, USA"),  # Near Times Square
-    ("Meredith Palmer", "meredith.palmer@example.com", "Union Square, New York, USA"),  # Near Flatiron Building
-    ("Stanley Hudson", "stanley.hudson@example.com", "SoHo, New York, USA"),  # Near One World Trade Center
+
+    # Additional New York Users (Near Existing Clusters)
+    ("Michael Scott", "michael.scott@example.com", "Madison Square Garden, New York, USA"),
+    ("Pam Beesly", "pam.beesly@example.com", "Bryant Park, New York, USA"),
+    ("Jim Halpert", "jim.halpert@example.com", "One World Trade Center, New York, USA"),
+    ("Dwight Schrute", "dwight.schrute@example.com", "South Street Seaport, New York, USA"),
+    ("Kevin Malone", "kevin.malone@example.com", "The Met Museum, New York, USA"),
+    ("Oscar Martinez", "oscar.martinez@example.com", "Flatiron Building, New York, USA"),
+    ("Angela Martin", "angela.martin@example.com", "Battery Park, New York, USA"),
+    ("Ryan Howard", "ryan.howard@example.com", "Columbus Circle, New York, USA"),
+    ("Kelly Kapoor", "kelly.kapoor@example.com", "Grand Central Terminal, New York, USA"),
+    ("Toby Flenderson", "toby.flenderson@example.com", "Hudson Yards, New York, USA"),
+    ("Meredith Palmer", "meredith.palmer@example.com", "Union Square, New York, USA"),
+    ("Stanley Hudson", "stanley.hudson@example.com", "SoHo, New York, USA"),
+    ("Darryl Philbin", "darryl.philbin@example.com", "Lower East Side, New York, USA"),
+    ("Erin Hannon", "erin.hannon@example.com", "Chinatown, New York, USA"),
+    ("Andy Bernard", "andy.bernard@example.com", "Washington Square Park, New York, USA"),
+    ("Phyllis Vance", "phyllis.vance@example.com", "Little Italy, New York, USA"),
+    ("Creed Bratton", "creed.bratton@example.com", "Greenwich Village, New York, USA"),
+    ("Jan Levinson", "jan.levinson@example.com", "Chelsea Market, New York, USA"),
+    ("Holly Flax", "holly.flax@example.com", "West Village, New York, USA"),
+    ("Gabe Lewis", "gabe.lewis@example.com", "Rockefeller Plaza, New York, USA"),
+    ("Karen Filippelli", "karen.filippelli@example.com", "Bowery, New York, USA"),
+    ("Roy Anderson", "roy.anderson@example.com", "Fifth Avenue, New York, USA"),
+    ("David Wallace", "david.wallace@example.com", "Upper West Side, New York, USA"),
+    ("Clark Green", "clark.green@example.com", "Meatpacking District, New York, USA"),
+    ("Pete Miller", "pete.miller@example.com", "East Village, New York, USA"),
+    ("Nate Nickerson", "nate.nickerson@example.com", "Tribeca, New York, USA"),
+    ("Jo Bennett", "jo.bennett@example.com", "Financial District, New York, USA"),
+    ("Robert California", "robert.california@example.com", "Murray Hill, New York, USA"),
+    ("Todd Packer", "todd.packer@example.com", "Gramercy Park, New York, USA"),
+    ("Mose Schrute", "mose.schrute@example.com", "Stuyvesant Town, New York, USA"),
+    ("Devon White", "devon.white@example.com", "Hudson River Park, New York, USA"),
+    ("Cathy Simms", "cathy.simms@example.com", "Carnegie Hall, New York, USA"),
+    ("Hank Tate", "hank.tate@example.com", "Radio City Music Hall, New York, USA"),
     
     # 🌉 San Francisco Cluster
     ("David Wilson", "david.wilson@example.com", "Golden Gate Bridge, San Francisco, USA"),
     ("Eva Martinez", "eva.martinez@example.com", "Alcatraz Island, San Francisco, USA"),
     ("Frank Lopez", "frank.lopez@example.com", "Silicon Valley, California, USA"),
 
-    # 🏙️ Additional San Francisco users (within 2.5 km)
-    ("Phyllis Vance", "phyllis.vance@example.com", "Fisherman’s Wharf, San Francisco, USA"),  # Near Alcatraz
-    ("Andy Bernard", "andy.bernard@example.com", "Coit Tower, San Francisco, USA"),  # Near Golden Gate
-    ("Darryl Philbin", "darryl.philbin@example.com", "Union Square, San Francisco, USA"),  # Near Market Street
-    ("Creed Bratton", "creed.bratton@example.com", "Chinatown, San Francisco, USA"),  # Near Financial District
+    # Additional San Francisco Users (Within 2.5 km)
+    ("Phyllis Vance", "phyllis.vance@example.com", "Fisherman’s Wharf, San Francisco, USA"),
+    ("Andy Bernard", "andy.bernard@example.com", "Coit Tower, San Francisco, USA"),
+    ("Darryl Philbin", "darryl.philbin@example.com", "Union Square, San Francisco, USA"),
+    ("Creed Bratton", "creed.bratton@example.com", "Chinatown, San Francisco, USA"),
+    ("Jo Bennett", "jo.bennett@example.com", "Embarcadero, San Francisco, USA"),
+    ("Holly Flax", "holly.flax@example.com", "Lombard Street, San Francisco, USA"),
+    ("Michael Scott", "michael.scott@example.com", "Haight-Ashbury, San Francisco, USA"),
+    ("Pam Beesly", "pam.beesly@example.com", "Mission District, San Francisco, USA"),
+    ("Jim Halpert", "jim.halpert@example.com", "Twin Peaks, San Francisco, USA"),
+    ("Dwight Schrute", "dwight.schrute@example.com", "Marina District, San Francisco, USA"),
+    ("Kevin Malone", "kevin.malone@example.com", "Golden Gate Park, San Francisco, USA"),
+    ("Angela Martin", "angela.martin@example.com", "Presidio, San Francisco, USA"),
+    ("Ryan Howard", "ryan.howard@example.com", "South Beach, San Francisco, USA"),
+    ("Kelly Kapoor", "kelly.kapoor@example.com", "Russian Hill, San Francisco, USA"),
+    ("Toby Flenderson", "toby.flenderson@example.com", "North Beach, San Francisco, USA"),
+    ("Meredith Palmer", "meredith.palmer@example.com", "Japantown, San Francisco, USA"),
+    ("Stanley Hudson", "stanley.hudson@example.com", "Financial District, San Francisco, USA"),
+    ("Oscar Martinez", "oscar.martinez@example.com", "Tenderloin, San Francisco, USA"),
+    ("Jan Levinson", "jan.levinson@example.com", "Nob Hill, San Francisco, USA"),
+    ("Robert California", "robert.california@example.com", "SOMA, San Francisco, USA"),
+    ("Clark Green", "clark.green@example.com", "Castro District, San Francisco, USA"),
+    ("Pete Miller", "pete.miller@example.com", "Bayview, San Francisco, USA"),
+    ("Nate Nickerson", "nate.nickerson@example.com", "Dogpatch, San Francisco, USA"),
+    ("Roy Anderson", "roy.anderson@example.com", "Noe Valley, San Francisco, USA"),
+    ("David Wallace", "david.wallace@example.com", "Bernal Heights, San Francisco, USA"),
+    ("Todd Packer", "todd.packer@example.com", "Ocean Beach, San Francisco, USA"),
+    ("Mose Schrute", "mose.schrute@example.com", "Balboa Park, San Francisco, USA"),
+    ("Cathy Simms", "cathy.simms@example.com", "Fort Mason, San Francisco, USA"),
+    ("Hank Tate", "hank.tate@example.com", "Alamo Square, San Francisco, USA"),
+    ("Gabe Lewis", "gabe.lewis@example.com", "Pier 39, San Francisco, USA"),
 ]
 
 
