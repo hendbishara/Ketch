@@ -29,12 +29,13 @@ class Modified_Dijkstra:
     
         heapq.heappush(self.Q,(0,"WareHouse"))
     
-    def Dijkstra(self):
+    def Dijkstra_version1(self):
         #initialize graph
         self.create_graph_from_clusters()
         
         #initialize a set to keep track of visited nodes
         visited = set()
+        
         
         while len(self.Q) != 0:
             k , u_id = heapq.heappop(self.Q) #extract min
@@ -62,6 +63,103 @@ class Modified_Dijkstra:
                     # Push the updated node to the priority queue
                     heapq.heappush(self.Q, (new_loss, v_id))
     
+    def Dijkstra_version2(self):
+        #initialize graph
+        self.create_graph_from_clusters()
+        
+        #initialize a set to keep track of visited nodes
+        visited = set()
+        
+        #initialize a set to keep track of already assigned nodes
+        assigned_nodes = set()
+        
+        while len(self.Q) != 0:
+            k , u_id = heapq.heappop(self.Q) #extract min
+            #skip outdated or already processed entries
+            if u_id in visited:
+                continue
+            visited.add(u_id)
+            #access the node's data
+            u = self.g.nodes[u_id]
+            
+            # Ensure distinct paths: if `v_id` is already assigned, skip it
+            if u_id in assigned_nodes:
+                continue
+            
+            for v_id in self.g.neighbors(u_id):
+                
+                v = self.g.nodes[v_id]  # Access the neighboring node data
+                
+                # Relaxation condition
+                new_path_C = u['path_C'] + v['capacity']
+                new_path_d = u['path_d'] + self.g[u_id][v_id]['weight']
+                new_loss = new_path_d / new_path_C
+                
+                if new_loss < v['loss'] and new_path_C <= self.max_c:
+                # Update node properties
+                    v['loss'] = new_loss
+                    v['path_C'] = new_path_C
+                    v['path_d'] = new_path_d
+                    v['pi'] = u_id
+                
+                    # Push the updated node to the priority queue
+                    heapq.heappush(self.Q, (new_loss, v_id))
+                    
+                    # Mark node as assigned so it cannot be part of another path
+                    assigned_nodes.add(v_id)
+    
+    
+    def Dijkstra_version3(self):
+        # Initialize graph
+        self.create_graph_from_clusters()
+
+        # Set to track visited nodes
+        visited = set()
+
+        while len(self.Q) != 0:
+            k, u_id = heapq.heappop(self.Q)  # Extract min
+
+            # Skip already processed nodes
+            if u_id in visited:
+                continue
+            visited.add(u_id)
+
+            # Access the node's data
+            u = self.g.nodes[u_id]
+
+            best_v_id = None  # Store the best neighbor for u
+            best_loss = math.inf
+            best_path_C = 0
+            best_path_d = 0
+
+            for v_id in self.g.neighbors(u_id):
+                v = self.g.nodes[v_id]  # Access the neighboring node data
+
+                # Compute new path properties
+                new_path_C = u['path_C'] + v['capacity']
+                new_path_d = u['path_d'] + self.g[u_id][v_id]['weight']
+                new_loss = new_path_d / new_path_C
+
+                # Check if this neighbor is the best candidate
+                if new_path_C <= self.max_c and new_loss < best_loss:
+                    best_loss = new_loss
+                    best_v_id = v_id
+                    best_path_C = new_path_C
+                    best_path_d = new_path_d
+
+            # If a valid best neighbor exists, assign `pi` and update values
+            if best_v_id is not None:
+                v = self.g.nodes[best_v_id]
+                v['loss'] = best_loss
+                v['path_C'] = best_path_C
+                v['path_d'] = best_path_d
+                v['pi'] = u_id  # Assign u as parent
+
+                # Push the best neighbor to the priority queue
+                heapq.heappush(self.Q, (best_loss, best_v_id))
+
+        
+        
     def get_graph(self):
         return self.g
     
