@@ -1,6 +1,5 @@
 import networkx as nx
-from 
-geopy.distance import geodesic
+from geopy.distance import geodesic
 import db_methods
 import matplotlib.pyplot as plt
 
