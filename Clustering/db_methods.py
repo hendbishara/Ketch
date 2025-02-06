@@ -49,20 +49,43 @@ def add_user(name, email, address):
     db.close()
 
 def add_new_order(order_id, user_id, order_details, latitude, longitude):
+    """ Adds a new order only if it does not already exist in the database. """
+
     db = get_connection()
     cursor = db.cursor()
 
-    # Insert the order for the user
-    cursor.execute("""
-        INSERT INTO orders (id, user_id, order_details, timestamp)
-        VALUES (%s, %s, %s, NOW())
-    """, (order_id, user_id, order_details))
-    
-    db.commit()
-    cursor.close()
-    db.close()
+    try:
+        # ✅ Step 1: Check if the order already exists
+        cursor.execute("SELECT id FROM orders WHERE id = %s", (order_id,))
+        existing_order = cursor.fetchone()
 
-    print(f"Order {order_id} for user {user_id} added to the database.")
+        if existing_order:
+            print(f"Order {order_id} already exists. Skipping insertion.")
+            return  # Exit function if order already exists
+
+        # ✅ Step 2: Insert the new order
+        cursor.execute("""
+            INSERT INTO orders (id, user_id, order_details, timestamp)
+            VALUES (%s, %s, %s, NOW())
+        """, (order_id, user_id, order_details))
+
+        # ✅ Step 3: Update the user's coordinates in the users table
+        cursor.execute("""
+            UPDATE users SET latitude = %s, longitude = %s WHERE id = %s
+        """, (latitude, longitude, user_id))
+
+        # ✅ Commit changes
+        db.commit()
+        print(f"New order {order_id} for user {user_id} added successfully.")
+
+    except Exception as e:
+        db.rollback()
+        print(f"Database error: {e}")
+
+    finally:
+        cursor.close()
+        db.close()
+
 
 
 def get_order_capacity(order_id):
@@ -171,7 +194,17 @@ def get_user_locations_vis():
     conn.close()
     
     return user_locations
-
+def get_user_id_from_order(order_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Query to fetch user locations (address, latitude, longitude)
+    cursor.execute("SELECT user_id FROM orders where id = %s",(order_id,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if result: return result[0]
+    else: return None
 
 
 # In db_methods.py
