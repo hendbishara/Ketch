@@ -30,7 +30,7 @@ def test_modified_dijkstra():
     warehouse_coords = (40.7128, -74.0060)  # Example: New York City
 
     # Generate test clusters
-    num_clusters = 5
+    num_clusters = 10
     clusters = generate_test_clusters(num_clusters, warehouse_coords)
 
     # Maximum delivery capacity
