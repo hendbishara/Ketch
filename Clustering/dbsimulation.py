@@ -1,5 +1,6 @@
 import db_methods
 import mysql.connector
+import random
 
 # List of user data with name, email, and address
 users = [
@@ -22,7 +23,7 @@ for name, email, address in users:
     db_methods.add_user(name, email, address)
 '''
 
-
+'''
 def create_orders_for_all_users():
     # Step 1: Retrieve all users from the users table
     users = db_methods.get_all_users()
@@ -43,4 +44,8 @@ def create_orders_for_all_users():
 
 # Call the function to generate orders for all users
 create_orders_for_all_users()
+'''
+
+db_methods.update_order_details_with_random_values()
+
 
