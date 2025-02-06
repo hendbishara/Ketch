@@ -24,7 +24,7 @@ class Modified_Dijkstra:
         for node in self.g.nodes():
             for node2 in self.g.nodes():
                 tmp = distance(self.g.nodes[node]['coords'], self.g.nodes[node2]['coords']).kilometers
-                if node != node2:
+                if node != node2 and node2 != "WareHouse":
                     self.g.add_edge(node,node2,weight = tmp)
     
         heapq.heappush(self.Q,(0,"WareHouse"))
