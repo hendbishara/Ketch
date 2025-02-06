@@ -42,53 +42,6 @@ class ClusterManager:
                 clusters.append([(user_address, order_coord)])  # New cluster with user address and order
         self.clusters = clusters
 
-    def build_and_show_graph(self, radius_km=5):
-        clusters = self.clusters  # Assuming clusters is a list of lists of address-coordinate pairs
-        G = nx.Graph()  # Initialize a new graph
-
-        # Iterate through each cluster
-        for cluster in clusters:
-            if len(cluster) < 2:  # Skip clusters with fewer than 2 elements (no edges to add)
-                continue
-            
-            # Use the first address in the cluster as the centroid
-            centroid_address, centroid_coordinates = list(cluster)[0]
-            centroid_coordinates = tuple(map(float, centroid_coordinates))  # Ensure it’s a tuple of floats
-            
-            # Iterate through the rest of the addresses in the cluster
-            for address, coordinates in cluster:
-                coordinates = tuple(map(float, coordinates))  # Ensure coordinates are in float format
-                
-                if coordinates == centroid_coordinates:  # Skip the centroid itself to avoid distance = 0
-                    continue
-                
-                # Print coordinates for debugging
-                print(f"Calculating distance between {centroid_address} and {address}")
-                print(f"Centroid Coordinates: {centroid_coordinates}, Address Coordinates: {coordinates}")
-                
-                # Calculate the distance from the centroid to this address
-                distance = geodesic(centroid_coordinates, coordinates).km
-                print(f"Distance: {distance} km")
-                
-                # Add edge if the distance is within the radius
-                if distance <= radius_km:
-                    G.add_edge(centroid_address, address, weight=distance)
-                    print(f"Adding edge between {centroid_address} and {address} with distance {distance} km")
-        
-        # Now plot the graph
-        pos = nx.spring_layout(G, seed=42)  # Adjust layout for better positioning
-        nx.draw(G, pos, with_labels=True, node_size=2000, node_color="skyblue", font_size=10, font_weight="bold", edge_color="gray")
-        
-        # Draw edge labels (show distances on edges)
-        edge_labels = nx.get_edge_attributes(G, 'weight')  # Get the weights (distances) of the edges
-        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=8, font_color="red")
-
-        # Show the plot
-        plt.title("Clusters Graph with Distances from Centroid")
-        plt.show()
-        
-
-
     def get_clusters(self):
         return self.clusters
 

@@ -1,7 +1,8 @@
 import random
 from geopy.distance import geodesic
 import db_methods
-from cluster_manager import ClusterManager  # Assuming the ClusterManager is in a file named cluster_manager.py
+#from cluster_manager import ClusterManager
+from cluster_manager2 import ClusterManager
 
 class Simulation:
     def __init__(self, cluster_manager):
@@ -26,10 +27,10 @@ class Simulation:
         self.cluster_manager.visualize_clusters()
 
 # Simulation usage:
-cluster_manager = ClusterManager(radius_km=5)  # Initialize with desired radius
-cluster_manager.build_clusters()  # Build initial clusters from existing data
+cluster_manager2 = ClusterManager(5,7)  # Initialize with desired radius
+cluster_manager2.build_clusters()  # Build initial clusters from existing data
 
-cluster_manager.build_and_show_graph()
+
 '''
 simulation = Simulation(cluster_manager)
 simulation.run_simulation(50)  # Simulate adding 50 random orders
