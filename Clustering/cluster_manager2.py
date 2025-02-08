@@ -17,6 +17,8 @@ class Cluster:
         self.orders = {first_order_id}  # Set of order IDs in this cluster
         self.centroid = centroid  # Centroid (coordinates of the first order)
         self.total_capacity = first_order_capacity  # Total capacity of orders in this cluster
+        self.max_capacity = 20  # Maximum capacity constraint
+        self.radius_km = 1  # Radius in kilometers
 
     def add_order(self, order_id, order_capacity):
         """ Adds an order to the cluster if it fits the criteria """
@@ -141,51 +143,6 @@ class ClusterManager:
             print(f"Error: The map file was not created at {map_path}.")
 
 
-'''
-    def create_map(self):
-        # Create a base map centered around a central location (can be the average of all centroids)
-        if not self.clusters:
-            print("No clusters available to create a map.")
-            return
-
-        # Set initial location based on the first cluster's centroid
-        first_cluster = self.clusters[0]
-        map_center = first_cluster.centroid
-        map_obj = folium.Map(location=map_center, zoom_start=12)
-
-        # Add markers for individual orders and clusters
-        for cluster in self.clusters:
-            # Plot centroid of the cluster (with a different color)
-            folium.Marker(
-                location=cluster.centroid,
-                popup=f"Cluster ID: {cluster.cluster_id}<br>Total Capacity: {cluster.total_capacity}",
-                icon=folium.Icon(color='blue', icon='info-sign')
-            ).add_to(map_obj)
-
-            # Plot all orders within the cluster
-            for order_id in cluster.orders:
-                # For each order, retrieve the coordinates and display
-                user_coordinates = db_methods.get_user_coordinates(order_id)  # You can update this line to fetch the right coordinates
-                if user_coordinates:
-                    folium.Marker(
-                        location=user_coordinates,
-                        popup=f"Order ID: {order_id}",
-                        icon=folium.Icon(color='red', icon='cloud')
-                    ).add_to(map_obj)
-
-            map_path = os.path.join(os.getcwd(), "cluster_map.html")
-
-            # Save the map
-            map_obj.save(map_path)
-            print(f"Map has been saved as '{map_path}'.")
-
-            # Check if the file exists before trying to open
-            if os.path.exists(map_path):
-                print(f"Opening map at {map_path}")
-                webbrowser.open(f'file://{map_path}', new=2)
-            else:
-                print(f"Error: The map file was not created at {map_path}.")
-'''
 
 
 

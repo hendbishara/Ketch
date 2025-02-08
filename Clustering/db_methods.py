@@ -255,6 +255,85 @@ def update_order_details_with_random_values():
         connection.close()
 
 
+def get_items_below_capacity(max_capacity):
+    """ Fetch items from the database that fit within the given capacity. """
+    connection = get_connection()  # Your database connection method
+    cursor = connection.cursor(dictionary=True)
+    
+    cursor.execute("SELECT name, capacity FROM items WHERE capacity <= %s", (max_capacity,))
+    items = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+    return items
+
+def get_users_in_radius(center_coordinates, radius_km):
+    """ Fetch users within the given radius. (Assuming geolocation in DB) """
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    lat, lon = center_coordinates
+    query = """
+        SELECT name, email
+        FROM users
+        WHERE ST_Distance_Sphere(
+            point(longitude, latitude),
+            point(%s, %s)
+        ) <= %s * 1000
+    """
+    cursor.execute(query, (lon, lat, radius_km))
+    users = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+    return users
+
+
+def create_items_table():
+    """Creates an 'items' table and inserts sample items with capacities between 1 and 3."""
+    try:
+        # Establish database connection (Modify these credentials for your setup)
+        db = get_connection()
+        cursor = db.cursor()
+
+        # Create the items table if it does not exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                capacity INT CHECK (capacity BETWEEN 1 AND 3)
+            );
+        """)
+
+        # Sample items to insert (all with capacity < 4)
+        sample_items = [
+            ("Laptop", 3),
+            ("Smartphone", 2),
+            ("Book", 1),
+            ("Tablet", 2),
+            ("Camera", 3),
+            ("Headphones", 1),
+            ("Smartwatch", 2),
+            ("Gaming Console", 3)
+        ]
+
+        # Insert items into the table
+        cursor.executemany("INSERT INTO items (name, capacity) VALUES (%s, %s);", sample_items)
+
+        # Commit changes
+        db.commit()
+        print("Items table created and sample items inserted successfully!")
+
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+
+    finally:
+        cursor.close()
+        db.close()
+
+
+
+
 '''
 def create_orders_for_all_users():
     # Retrieve all users

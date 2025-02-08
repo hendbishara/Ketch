@@ -87,7 +87,7 @@ users = [
 
 
 
-
+'''
 # Add each user one at a time
 for name, email, address in users:
     db_methods.add_user(name, email, address)
@@ -117,5 +117,6 @@ create_orders_for_all_users()
 
 
 db_methods.update_order_details_with_random_values()
-
-
+db_methods.create_items_table()
+'''
+db_methods.add_user("Abdallah Saida", "abed.saida.9@gmail.com", "Herald Square, New York, USA")
