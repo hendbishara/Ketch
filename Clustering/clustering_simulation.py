@@ -1,36 +1,24 @@
 import random
 from geopy.distance import geodesic
 import db_methods
-#from cluster_manager import ClusterManager
 from cluster_manager2 import ClusterManager
+import Send_note
 
 class Simulation:
     def __init__(self, cluster_manager):
         self.cluster_manager = cluster_manager
 
-    def generate_random_order(self):
-        # Generate random latitude and longitude (Example: Random location within a city)
-        random_lat = random.uniform(40.0, 42.0)  # Random latitude between 40 and 42
-        random_lon = random.uniform(-74.0, -73.0)  # Random longitude between -74 and -73
-        return random_lat, random_lon
-
-    def run_simulation(self, num_orders=10):
-        for order_id in range(1, num_orders + 1):
-            # Simulate creating an order (for simplicity, using random lat/lon)
-            random_lat, random_lon = self.generate_random_order()
-
-            # Simulate adding the order to the cluster
-            new_user_id = random.randint(1, 10)  # Random user ID for now
-            self.cluster_manager.handle_new_order(order_id, new_user_id, random_lat, random_lon)
-
-        # After adding all orders, visualize the clusters
-        self.cluster_manager.visualize_clusters()
 
 # Simulation usage:
-cluster_manager2 = ClusterManager(5,7)  # Initialize with desired radius
+cluster_manager2 = ClusterManager(1,20)  # Initialize with desired radius
 cluster_manager2.build_clusters()  # Build initial clusters from existing data
+cluster_manager2.create_map()
 
-
+# Example Usage
+# Assume clusters are built already
+#for cluster in cluster_manager2.get_clusters():
+    
+#    Send_note.notify_users_about_cluster_items(cluster)
 '''
 simulation = Simulation(cluster_manager)
 simulation.run_simulation(50)  # Simulate adding 50 random orders
