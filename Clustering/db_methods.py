@@ -49,20 +49,43 @@ def add_user(name, email, address):
     db.close()
 
 def add_new_order(order_id, user_id, order_details, latitude, longitude):
+    """ Adds a new order only if it does not already exist in the database. """
+
     db = get_connection()
     cursor = db.cursor()
 
-    # Insert the order for the user
-    cursor.execute("""
-        INSERT INTO orders (id, user_id, order_details, timestamp)
-        VALUES (%s, %s, %s, NOW())
-    """, (order_id, user_id, order_details))
-    
-    db.commit()
-    cursor.close()
-    db.close()
+    try:
+        # ✅ Step 1: Check if the order already exists
+        cursor.execute("SELECT id FROM orders WHERE id = %s", (order_id,))
+        existing_order = cursor.fetchone()
 
-    print(f"Order {order_id} for user {user_id} added to the database.")
+        if existing_order:
+            print(f"Order {order_id} already exists. Skipping insertion.")
+            return  # Exit function if order already exists
+
+        # ✅ Step 2: Insert the new order
+        cursor.execute("""
+            INSERT INTO orders (id, user_id, order_details, timestamp)
+            VALUES (%s, %s, %s, NOW())
+        """, (order_id, user_id, order_details))
+
+        # ✅ Step 3: Update the user's coordinates in the users table
+        cursor.execute("""
+            UPDATE users SET latitude = %s, longitude = %s WHERE id = %s
+        """, (latitude, longitude, user_id))
+
+        # ✅ Commit changes
+        db.commit()
+        print(f"New order {order_id} for user {user_id} added successfully.")
+
+    except Exception as e:
+        db.rollback()
+        print(f"Database error: {e}")
+
+    finally:
+        cursor.close()
+        db.close()
+
 
 
 def get_order_capacity(order_id):
@@ -171,7 +194,17 @@ def get_user_locations_vis():
     conn.close()
     
     return user_locations
-
+def get_user_id_from_order(order_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Query to fetch user locations (address, latitude, longitude)
+    cursor.execute("SELECT user_id FROM orders where id = %s",(order_id,))
+    result = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if result: return result[0]
+    else: return None
 
 
 # In db_methods.py
@@ -220,6 +253,85 @@ def update_order_details_with_random_values():
     finally:
         cursor.close()
         connection.close()
+
+
+def get_items_below_capacity(max_capacity):
+    """ Fetch items from the database that fit within the given capacity. """
+    connection = get_connection()  # Your database connection method
+    cursor = connection.cursor(dictionary=True)
+    
+    cursor.execute("SELECT name, capacity FROM items WHERE capacity <= %s", (max_capacity,))
+    items = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+    return items
+
+def get_users_in_radius(center_coordinates, radius_km):
+    """ Fetch users within the given radius. (Assuming geolocation in DB) """
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    lat, lon = center_coordinates
+    query = """
+        SELECT name, email
+        FROM users
+        WHERE ST_Distance_Sphere(
+            point(longitude, latitude),
+            point(%s, %s)
+        ) <= %s * 1000
+    """
+    cursor.execute(query, (lon, lat, radius_km))
+    users = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+    return users
+
+
+def create_items_table():
+    """Creates an 'items' table and inserts sample items with capacities between 1 and 3."""
+    try:
+        # Establish database connection (Modify these credentials for your setup)
+        db = get_connection()
+        cursor = db.cursor()
+
+        # Create the items table if it does not exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                capacity INT CHECK (capacity BETWEEN 1 AND 3)
+            );
+        """)
+
+        # Sample items to insert (all with capacity < 4)
+        sample_items = [
+            ("Laptop", 3),
+            ("Smartphone", 2),
+            ("Book", 1),
+            ("Tablet", 2),
+            ("Camera", 3),
+            ("Headphones", 1),
+            ("Smartwatch", 2),
+            ("Gaming Console", 3)
+        ]
+
+        # Insert items into the table
+        cursor.executemany("INSERT INTO items (name, capacity) VALUES (%s, %s);", sample_items)
+
+        # Commit changes
+        db.commit()
+        print("Items table created and sample items inserted successfully!")
+
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+
+    finally:
+        cursor.close()
+        db.close()
+
+
 
 
 '''
