@@ -3,7 +3,7 @@ import mysql.connector
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import db_methods  # Your existing database helper methods
-from cluster_manager2 import ClusterManager  # Your existing ClusterManager class
+from Clustering.cluster_manager import ClusterManager  # Your existing ClusterManager class
 
 # SMTP Configuration
 SMTP_SERVER = "smtp.gmail.com"
