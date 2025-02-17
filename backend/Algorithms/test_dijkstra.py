@@ -1,6 +1,6 @@
 import networkx as nx
-from geopy.geocoders import Nominatim
-from geopy.distance import distance
+#from geopy.geocoders import Nominatim
+#from geopy.distance import distance
 import random
 import math
 import matplotlib.pyplot as plt
