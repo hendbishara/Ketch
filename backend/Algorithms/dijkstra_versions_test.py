@@ -25,10 +25,10 @@ def generate_test_clusters(num_clusters):
 warehouse_coords = (40.5, -73.5)  
 
 # Generate 10 test clusters
-test_clusters = generate_test_clusters(10)
+test_clusters = generate_test_clusters(100)
 
 # Initialize the Modified Dijkstra object
-max_capacity = 100  # Define a max capacity limit
+max_capacity = 1000  # Define a max capacity limit
 dijkstra_test_V1 = Modified_Dijkstra(test_clusters, max_capacity, warehouse_coords)
 dijkstra_test_V2 = Modified_Dijkstra(test_clusters, max_capacity, warehouse_coords)
 dijkstra_test_V3 = Modified_Dijkstra(test_clusters, max_capacity, warehouse_coords)
@@ -52,10 +52,22 @@ def plot_graph(graph, title):
 #baseline_result = time_algorithm(dijkstra_test.base_algo, "Baseline")
 print("Running Dijkstra Version 1...")
 dijkstra_v1_result = time_algorithm(dijkstra_test_V1.Dijkstra_version1, "Dijkstra V1")
+print("orders V1:")
+orders_v1 = dijkstra_test_V1.get_orders()
+for lst in orders_v1:
+    print(list(lst))
 print("Running Dijkstra Version 2...")
 dijkstra_v2_result = time_algorithm(dijkstra_test_V2.Dijkstra_version2, "Dijkstra V2")
+print("orders V2:")
+orders_v2 = dijkstra_test_V2.get_orders()
+for lst in orders_v2:
+    print(list(lst))
 print("Running Dijkstra Version 3...")
 dijkstra_v3_result = time_algorithm(dijkstra_test_V3.Dijkstra_version3, "Dijkstra V3")
+print("orders V3:")
+orders_v3 = dijkstra_test_V3.get_orders()
+for lst in orders_v3:
+    print(list(lst))
 
 # Plot initial and final graphs
 print("Visualizing Graphs...")

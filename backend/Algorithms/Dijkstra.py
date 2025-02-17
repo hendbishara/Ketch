@@ -100,12 +100,17 @@ class Modified_Dijkstra:
             #access the node's data
             u = self.g.nodes[u_id]
             
+            print("current node ot of heap is: " + str(u_id))
             
             for v_id in self.g.neighbors(u_id):
                 # Ensure distinct paths: if u_id` is already assigned, skip it
                 if u_id != "WareHouse":   
                     if u_id in assigned_nodes:
                         continue
+                if v_id in visited:
+                    continue
+                
+                print("current neighbor is: " + str(v_id))
                 
                 v = self.g.nodes[v_id]  # Access the neighboring node data
                 
@@ -115,22 +120,24 @@ class Modified_Dijkstra:
                 new_loss = new_path_d / new_path_C
                 
                 if new_loss < v['loss'] and new_path_C <= self.max_c:
-                # Update node properties
-                    prev_pi = v['pi']
-                    v['loss'] = new_loss
-                    v['path_C'] = new_path_C
-                    v['path_d'] = new_path_d
-                    v['pi'] = u_id
+                    if (v_id != u['pi']):
+                    # Update node properties
+                        print("inside if condition!")
+                        prev_pi = v['pi']
+                        v['loss'] = new_loss
+                        v['path_C'] = new_path_C
+                        v['path_d'] = new_path_d
+                        v['pi'] = u_id
                 
-                    # Push the updated node to the priority queue
-                    heapq.heappush(self.Q, (new_loss, v_id))
-                    
-                    # Mark node as assigned so it cannot be part of another path
-                    if u_id != "WareHouse":
-                        assigned_nodes.add(u_id)
-                    if prev_pi !=None and prev_pi != "WareHouse":
-                        assigned_nodes.remove(prev_pi)
-        return self.combined_orders(self.build_graph())
+                        # Push the updated node to the priority queue
+                        heapq.heappush(self.Q, (new_loss, v_id))
+                        
+                        # Mark node as assigned so it cannot be part of another path
+                        if u_id != "WareHouse":
+                            assigned_nodes.add(u_id)
+                        if prev_pi !=None and prev_pi != "WareHouse":
+                            assigned_nodes.remove(prev_pi)
+        self.combined_orders(self.build_graph())
     
     def Dijkstra_version3(self):
         """ runs the modified dijkstra algorithm while it keeps track if the minimal loss of all neighbors of a certain node and assigns it as a parent to only one node
@@ -158,8 +165,12 @@ class Modified_Dijkstra:
             best_path_d = 0
 
             for v_id in self.g.neighbors(u_id):
+                if v_id in visited:
+                    continue
+                
                 v = self.g.nodes[v_id]  # Access the neighboring node data
 
+                
                 # Compute new path properties
                 new_path_C = u['path_C'] + v['capacity']
                 new_path_d = u['path_d'] + self.g[u_id][v_id]['weight']
@@ -193,7 +204,7 @@ class Modified_Dijkstra:
                     # Push the best neighbor to the priority queue
                     heapq.heappush(self.Q, (best_loss, best_v_id))
             
-        return self.combined_orders(self.build_graph())
+        self.combined_orders(self.build_graph())
 
         
         
@@ -233,7 +244,6 @@ class Modified_Dijkstra:
         in these vesions we assume that each node can be only one a pi value which means the graph we build here is a tree where no node that
         is not the warehouse hase an out degree > 1"""
         
-        orders = set()
         
         # find all leaf nodes:
         leaf_nodes = [node for node in bfs_graph.nodes() if bfs_graph.out_degree(node) == 0 and node != "WareHouse"]
@@ -245,9 +255,9 @@ class Modified_Dijkstra:
             while current is not None:
                 path.append(current)
                 current = self.g.nodes[current]['pi']
-                print(current)
-            orders.add(tuple(reversed(path)))
-        return orders | self.orders
+                #print(current)
+            self.orders.add(tuple(reversed(path)))
+
     
     
     def combine_orders_V1(self,bfs_graph):
@@ -279,7 +289,10 @@ class Modified_Dijkstra:
         
         #we get a tree where no node that is not the warehouse hase an out degree > 1
         #call on the combined_orders function
-        return self.combined_orders(bfs_graph)
+        self.combined_orders(bfs_graph)
+        
+    def get_orders(self):
+        return self.orders
                           
         
         
