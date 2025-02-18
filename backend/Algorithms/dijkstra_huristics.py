@@ -102,8 +102,17 @@ class AlgorithmAnalyzer:
         """Convert results to DataFrame"""
         return pd.DataFrame(self.results)
     
-    def plot_comparative_analysis(self):
-        """Create comparative visualization plots"""
+    def plot_comparative_analysis(self,save_pdf: bool = False, pdf_filename: str = 'analysis_plots.pdf'):
+        """
+        Create comparative visualization plots
+        
+        Parameters:
+        save_pdf (bool): Whether to save the plots to PDF
+        pdf_filename (str): Name of the PDF file to save
+        
+        Returns:
+        matplotlib.figure.Figure: The generated figure
+        """
         df = self.get_results_df()
         
         # Create figure with multiple subplots
@@ -137,6 +146,12 @@ class AlgorithmAnalyzer:
         axes[1,1].set_ylabel('Average Node Loss')
         
         plt.tight_layout()
+        
+        # Save to PDF if requested
+        if save_pdf:
+            fig.savefig(pdf_filename, format='pdf', bbox_inches='tight', dpi=300)
+            print(f"Plots saved to {pdf_filename}")
+        
         return fig
     
     def generate_summary_tables(self) -> Dict[str, pd.DataFrame]:
@@ -214,7 +229,7 @@ class AlgorithmAnalyzer:
 if __name__ == "__main__":
     # Define test parameters
     warehouse_coords = (40.7128, -74.0060)  # Example coordinates
-    cluster_sizes = [10, 20, 30, 40, 50]
+    cluster_sizes = [10, 20, 30, 40, 50, 100]
     max_capacities = [100, 200, 300]
     
     # Initialize analyzer
@@ -224,7 +239,7 @@ if __name__ == "__main__":
     analyzer.run_experiments(cluster_sizes, max_capacities)
     
     # Generate visualizations
-    fig = analyzer.plot_comparative_analysis()
+    fig = analyzer.plot_comparative_analysis(save_pdf=True, pdf_filename='algorithm_analysis.pdf')
     plt.show()
     
     # Generate summary tables
