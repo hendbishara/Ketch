@@ -109,4 +109,5 @@ Users ───(1:M)─── Active_Requests ───(M:1)─── Stores
 - Each **item** belongs to a **store** (`stores`).
 - A **delivery price** is calculated for each request.
 
+![image](https://github.com/user-attachments/assets/d2ce76f6-035f-405d-937a-d297c83a6f1f)
 
