@@ -109,12 +109,4 @@ Users ───(1:M)─── Active_Requests ───(M:1)─── Stores
 - Each **item** belongs to a **store** (`stores`).
 - A **delivery price** is calculated for each request.
 
----
 
-## **🛠 Next Steps**
-Would you like to:
-- Create SQL queries (e.g., fetching order details, calculating total price)?
-- Build API endpoints to interact with the database?
-- Add triggers for automated actions?
-
-Let me know how you want to proceed! 😊🚀
