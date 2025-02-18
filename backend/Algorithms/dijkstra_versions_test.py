@@ -25,13 +25,14 @@ def generate_test_clusters(num_clusters):
 warehouse_coords = (40.5, -73.5)  
 
 # Generate 10 test clusters
-test_clusters = generate_test_clusters(10)
+test_clusters = generate_test_clusters(20)
 
 # Initialize the Modified Dijkstra object
 max_capacity = 100  # Define a max capacity limit
-dijkstra_test_V1 = Modified_Dijkstra(test_clusters, max_capacity, warehouse_coords)
-dijkstra_test_V2 = Modified_Dijkstra(test_clusters, max_capacity, warehouse_coords)
-dijkstra_test_V3 = Modified_Dijkstra(test_clusters, max_capacity, warehouse_coords)
+dijkstra_test_V1 = Modified_Dijkstra(test_clusters, max_capacity, warehouse_coords, "V1")
+dijkstra_test_V2 = Modified_Dijkstra(test_clusters, max_capacity, warehouse_coords, "V2")
+dijkstra_test_V3 = Modified_Dijkstra(test_clusters, max_capacity, warehouse_coords, "V3")
+dijkstra_test_Basic = Modified_Dijkstra(test_clusters,max_capacity, warehouse_coords, "Base")
 
 def time_algorithm(func, name):
     start_time = time.time()
@@ -51,11 +52,67 @@ def plot_graph(graph, title):
 #print("Running Baseline Algorithm...")
 #baseline_result = time_algorithm(dijkstra_test.base_algo, "Baseline")
 print("Running Dijkstra Version 1...")
-dijkstra_v1_result = time_algorithm(dijkstra_test_V1.Dijkstra_version1, "Dijkstra V1")
+dijkstra_v1_result = time_algorithm(dijkstra_test_V1.get_orders, "Dijkstra V1")
+print("orders V1:")
+#orders_v1 = dijkstra_test_V1.get_orders()
+for lst in dijkstra_v1_result:
+    print(list(lst))
+dijkstra_test_V1.check_capacity_constraint()    
+
+print("capacities for V1: ")
+print(dijkstra_test_V1.get_orders_capacities())
+print("distances for V1: ")
+print(dijkstra_test_V1.get_orders_dist())
+print("losses for V1: ")
+print(dijkstra_test_V1.get_orders_loss())
+print("Average loss on V1: " + str(dijkstra_test_V1.get_Avg_loss_on_nodes()))
+
+    
 print("Running Dijkstra Version 2...")
-dijkstra_v2_result = time_algorithm(dijkstra_test_V2.Dijkstra_version2, "Dijkstra V2")
+dijkstra_v2_result = time_algorithm(dijkstra_test_V2.get_orders, "Dijkstra V2")
+print("orders V2:")
+#dijkstra_v2_result = dijkstra_test_V2.get_orders()
+for lst in dijkstra_v2_result:
+    print(list(lst))
+dijkstra_test_V2.check_capacity_constraint()
+print("capacities for V2: ")
+print(dijkstra_test_V2.get_orders_capacities())
+print("distances for V2: ")
+print(dijkstra_test_V2.get_orders_dist())
+print("losses for V2: ")
+print(dijkstra_test_V2.get_orders_loss())
+print("Average loss on V2: " + str(dijkstra_test_V2.get_Avg_loss_on_nodes()))
+
 print("Running Dijkstra Version 3...")
-dijkstra_v3_result = time_algorithm(dijkstra_test_V3.Dijkstra_version3, "Dijkstra V3")
+dijkstra_v3_result = time_algorithm(dijkstra_test_V3.get_orders, "Dijkstra V3")
+print("orders V3:")
+#orders_v3 = dijkstra_test_V3.get_orders()
+for lst in dijkstra_v3_result:
+    print(list(lst))
+dijkstra_test_V3.check_capacity_constraint()
+print("capacities for V3: ")
+print(dijkstra_test_V3.get_orders_capacities())
+print("distances for V3: ")
+print(dijkstra_test_V3.get_orders_dist())
+print("losses for V3: ")
+print(dijkstra_test_V3.get_orders_loss())
+print("Average loss on V3: " + str(dijkstra_test_V3.get_Avg_loss_on_nodes()))
+
+print("Running Dijkstra Basic: ")    
+orders_basic = dijkstra_test_Basic.get_orders()
+print("orders basic: ")
+#orders_basic = dijkstra_test_Basic.get_orders()
+for lst in orders_basic:
+    print(list(lst))
+
+print("capacities for Basic: ")
+print(dijkstra_test_Basic.get_orders_capacities())
+print("distances for Basic: ")
+print(dijkstra_test_Basic.get_orders_dist())
+print("losses for Basic: ")
+print(dijkstra_test_Basic.get_orders_loss())
+print("Average loss on Basic: " + str(dijkstra_test_Basic.get_Avg_loss_on_nodes()))
+
 
 # Plot initial and final graphs
 print("Visualizing Graphs...")
