@@ -1,0 +1,81 @@
+from flask import Flask, request, jsonify
+import mysql.connector
+import jwt
+import datetime
+import requests
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)
+
+# Database Connection
+DB_CONFIG = {
+    "host": "localhost",
+    "user": "root",
+    "password": "yourpassword",
+    "database": "yourdatabase"
+}
+
+def connect_db():
+    return mysql.connector.connect(**DB_CONFIG)
+
+# Create Users Table (Run Once)
+def create_users_table():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password VARCHAR(255),
+            google_id VARCHAR(255)
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+create_users_table()
+
+# Standard Signup Route
+@app.route("/signup", methods=["POST"])
+def signup():
+    data = request.json
+    email = data.get("email")
+    password = data.get("password")  # Store securely in real apps (e.g., bcrypt)
+    
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO users (email, password) VALUES (%s, %s)", (email, password))
+        conn.commit()
+        return jsonify({"message": "User registered successfully!"})
+    except mysql.connector.IntegrityError:
+        return jsonify({"message": "Email already exists!"}), 400
+    finally:
+        conn.close()
+
+# Google OAuth Signup Route
+@app.route("/google-signup", methods=["POST"])
+def google_signup():
+    data = request.json
+    token = data.get("token")
+    
+    google_info_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={token}"
+    google_response = requests.get(google_info_url).json()
+    email = google_response.get("email")
+    google_id = google_response.get("sub")
+    
+    if not email or not google_id:
+        return jsonify({"message": "Invalid Google token!"}), 400
+    
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO users (email, google_id) VALUES (%s, %s) ON DUPLICATE KEY UPDATE google_id=%s", (email, google_id, google_id))
+        conn.commit()
+        return jsonify({"message": "Google signup successful!"})
+    finally:
+        conn.close()
+
+if __name__ == "__main__":
+    app.run(debug=True)

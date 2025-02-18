@@ -1,9 +1,9 @@
 import random
 from geopy.distance import geodesic
 import db_methods
-from Clustering.cluster_manager import ClusterManager
+from cluster_manager import ClusterManager
 import Send_note
-from routing import RoutePlanner
+#from routing import RoutePlanner
 import openrouteservice
 
 API_KEY = "5b3ce3597851110001cf624801095298be2b4fd9aad1382911873455"
@@ -16,16 +16,14 @@ class Simulation:
         self.cluster_manager.build_clusters()  # Build initial clusters from existing data
         self.cluster_manager.create_map()
         return self.cluster_manager.get_clusters()
-    def run_routing(self):
-        planner = RoutePlanner(API_KEY, self.cluster_manager)
-        planner.draw_routes_between_neighbors()
+
 
 
 # Simulation usage:
 simulation = Simulation(ClusterManager(1, 20))
 clusters = simulation.run_clustering()
-planner = RoutePlanner(API_KEY, simulation.cluster_manager)
-planner.build_graph()
+#planner = RoutePlanner(API_KEY, simulation.cluster_manager)
+#planner.build_graph()
 # Example Usage
 # Assume clusters are built already
 #for cluster in cluster_manager2.get_clusters():
