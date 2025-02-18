@@ -6,7 +6,7 @@ import folium
 import webbrowser
 import os
 import numpy as np
-
+               
 class Cluster:
     
     global_cluster_id = 1  # Global counter for cluster IDs
