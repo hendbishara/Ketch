@@ -7,28 +7,48 @@ from collections import deque
 
 
 class Modified_Dijkstra:
-    def __init__(self,clusters,max_capacity, warehouse_coords):
+    def __init__(self,clusters,max_capacity, warehouse_coords,version):
         #we assume that the clusters we recieve have the centroid coordinates of each cluster and the total capacity of each cluster and cluster ID
         self.clusters = clusters
         self.max_c = max_capacity
         self.g = nx.DiGraph()
         self.Q = []
         self.warehouse_coords = warehouse_coords
-        self.orders = set()
+        self.orders = []
+        self.total_orders_capacity = []
+        self.total_orders_dist = []
+        self.total_orders_loss = []
+        self.version = version
     
     
     def base_algo(self):
         """base line algorithm that combines orders in each cluster, used to have a base line comparison for the huiristic calculations using the different versions of dijkstra"""
-        return self.clusters
+        for cluster in self.clusters:
+            self.orders.append(("WareHouse", cluster.id))
+            self.total_orders_capacity.append(cluster.capacity)
+            dist = distance(self.warehouse_coords,cluster.coordinates).km
+            self.total_orders_dist.append(dist)
+            self.total_orders_loss.append(dist/cluster.capacity)
         
       
     def create_graph_from_clusters(self):
         """initializes graph where each cluster is a node""" 
+        #make sure all fields are in initiale state
+        self.total_orders_capacity = []
+        self.total_orders_dist = []
+        self.total_orders_loss = []
+        self.g = nx.DiGraph() #initialize a new graph
+        self.Q = []
+        #strat building grph
         self.g.add_node("WareHouse", capacity = 0,path_C = 0, path_d = 0, loss = 0, pi = None, coords = self.warehouse_coords)
         for c in self.clusters:
             #check if node is full, add it as an order
             if(c.capacity >= self.max_c):
-                self.orders.add(("Warhouse",c))
+                self.orders.append(("Warhouse",c))
+                self.total_orders_capacity.append(c.capacity)
+                dist = distance(self.warehouse_coords,c.coordinates).km
+                self.total_orders_dist.append(dist)
+                self.total_orders_loss.append(dist/c.capacity)
                 continue #dont add node to the graph
             self.g.add_node(c.id, capacity = c.capacity, path_C = 0, path_d = math.inf, loss = math.inf, pi = None, coords = c.coordinates)
 
@@ -62,6 +82,9 @@ class Modified_Dijkstra:
             u = self.g.nodes[u_id]
             
             for v_id in self.g.neighbors(u_id):
+                #prevent cycles:
+                if v_id in visited:
+                    continue
                 v = self.g.nodes[v_id]  # Access the neighboring node data
                 # Relaxation condition
                 new_path_C = u['path_C'] + v['capacity']
@@ -77,7 +100,7 @@ class Modified_Dijkstra:
                 
                     # Push the updated node to the priority queue
                     heapq.heappush(self.Q, (new_loss, v_id))
-        #return self.combine_orders_V1(self.build_graph())
+        self.combine_orders_V1(self.build_graph())
     
     def Dijkstra_version2(self):
         """modified version of dijkstra that keeps track of nodes that where assigned aas parents, and does not allo two nodes to have the same parent unless its the warehouse
@@ -100,7 +123,7 @@ class Modified_Dijkstra:
             #access the node's data
             u = self.g.nodes[u_id]
             
-            print("current node ot of heap is: " + str(u_id))
+            #print("current node ot of heap is: " + str(u_id))
             
             for v_id in self.g.neighbors(u_id):
                 # Ensure distinct paths: if u_id` is already assigned, skip it
@@ -110,7 +133,7 @@ class Modified_Dijkstra:
                 if v_id in visited:
                     continue
                 
-                print("current neighbor is: " + str(v_id))
+                #print("current neighbor is: " + str(v_id))
                 
                 v = self.g.nodes[v_id]  # Access the neighboring node data
                 
@@ -122,7 +145,7 @@ class Modified_Dijkstra:
                 if new_loss < v['loss'] and new_path_C <= self.max_c:
                     if (v_id != u['pi']):
                     # Update node properties
-                        print("inside if condition!")
+                        #print("inside if condition!")
                         prev_pi = v['pi']
                         v['loss'] = new_loss
                         v['path_C'] = new_path_C
@@ -252,19 +275,22 @@ class Modified_Dijkstra:
         for leaf in leaf_nodes:
             path = []
             current = leaf
+            total_loss = self.g.nodes[current]['loss']
+            total_capacity = self.g.nodes[current]['path_C']
+            total_dist = self.g.nodes[current]['path_d']
             while current is not None:
                 path.append(current)
                 current = self.g.nodes[current]['pi']
                 #print(current)
-            self.orders.add(tuple(reversed(path)))
+            self.orders.append(reversed(path))
+            self.total_orders_capacity.append(total_capacity)
+            self.total_orders_dist.append(total_dist)
+            self.total_orders_loss.append(total_loss)
+            
 
     
-    
+    """
     def combine_orders_V1(self,bfs_graph):
-        """combine orders from the modified dijkstra version 1 where one node can be a parent to more 
-        than one other node, in this combinig function we check if a node is a parent to more than one node
-        we check the loss of all its children if we deliver from the warehouse directly and choose the max(loss) to keep
-        as its child"""
         
         
         # go over all nodes, check if out degree > 1 
@@ -277,6 +303,9 @@ class Modified_Dijkstra:
                     dist = self.g["WareHouse"][neighbor]['weight']
                     capacity = self.g.nodes[neighbor]['capacity']
                     curr_loss = dist / capacity
+                    if max_loss == 0:
+                        max_loss = curr_loss
+                        max_node = neighbor
                     if curr_loss<max_loss:
                         bfs_graph.remove_edge(node,neighbor)
                         bfs_graph.add_edge("WareHouse",neighbor)
@@ -290,9 +319,96 @@ class Modified_Dijkstra:
         #we get a tree where no node that is not the warehouse hase an out degree > 1
         #call on the combined_orders function
         self.combined_orders(bfs_graph)
+    """
+    
+    def combine_orders_V1(self, bfs_graph):
+        """Combine orders from the modified Dijkstra version 1 where one node can be a parent to more 
+        than one other node. In this combining function, we check if a node is a parent to more than one node,
+        check the loss of all its children if delivered from the warehouse directly, and choose the max(loss) to keep
+        as its child."""
+        
+        # Go over all nodes, check if out-degree > 1 
+        for node in bfs_graph.nodes():
+            if bfs_graph.out_degree(node) > 1:
+                #print(node)
+                # Collect modifications in a temporary list
+                modifications = []
+                
+                max_loss = -1
+                max_node = None
+                for neighbor in list(bfs_graph.successors(node)):  
+                    dist = self.g["WareHouse"][neighbor]['weight']
+                    capacity = self.g.nodes[neighbor]['capacity']
+                    curr_loss = dist / capacity
+
+                    if max_loss == -1:
+                        max_loss = curr_loss
+                        max_node = neighbor
+                        continue
+
+                    if curr_loss < max_loss:
+                        modifications.append((node, neighbor, "WareHouse"))
+                        self.g.nodes[neighbor]['pi'] = "WareHouse"
+                    else:
+                        if max_node is not None:
+                            modifications.append((node, max_node, "WareHouse"))
+                            self.g.nodes[max_node]['pi'] = "WareHouse"
+                            max_loss = curr_loss
+                            max_node = neighbor
+                
+                # Apply all modifications outside the loop
+                for node, to_remove, to_add in modifications:
+                    bfs_graph.remove_edge(node, to_remove)
+                    bfs_graph.add_edge(to_add, to_remove)
+
+        # We get a tree where no node, except the warehouse, has an out-degree > 1
+        # Call on the combined_orders function
+        self.combined_orders(bfs_graph)
+
         
     def get_orders(self):
+        if self.version == "Base":
+            self.base_algo()
+        elif self.version == "V1":
+            self.Dijkstra_version1()
+        elif self.version == "V2":
+            self.Dijkstra_version2()
+        elif self.version == "V3":
+            self.Dijkstra_version3()
+        else:
+            print("NO proper version was implied, Base version is run")
+            self.base_algo()
         return self.orders
+    
+    
+    def get_Avg_loss_on_nodes(self):
+        if self.version == "Base":
+            return sum([distance for distance in self.total_orders_loss]) / len(self.total_orders_loss)
+        total_loss = 0
+        num_of_nodes = len(self.g.nodes())
+        for node in self.g.nodes:
+            total_loss += self.g.nodes[node]['loss']
+        return total_loss/num_of_nodes
+    
+    def get_orders_capacities(self):
+        return self.total_orders_capacity
+    
+    def get_orders_dist(self):
+        return self.total_orders_dist
+    
+    def get_orders_loss(self):
+        return self.total_orders_loss
+    
+    
+    """Run this function only after running the algorithm, checks if all paths comply to the max capacity constraint"""
+    def check_capacity_constraint(self):
+        for i in range(len(self.total_orders_capacity)):
+            if self.total_orders_capacity[i]>self.max_c:
+                print("Capacity Constraint is not met on path: " + str(i) + " with actual capacity = " + str(self.total_orders_capacity[i]))
+        print("All capacities were checked")
+        
+            
+            
                           
         
         
