@@ -1,0 +1,22 @@
+.price-container {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between prices */
+    justify-content: center;
+  }
+  
+  .original-price {
+    font-size: 1rem;
+    color: gray;
+    text-decoration: line-through;
+  }
+  
+  .discounted-price {
+    background-color: black;
+    color: white;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 1rem;
+  }
+  
