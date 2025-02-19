@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 from Dijkstra import Modified_Dijkstra
 import sys
 import os
+import logging
+
+
 
 
 # Get absolute path to Clustering/
@@ -16,6 +19,9 @@ sys.path.append(clustering_path)
 # Now import the module
 import clustering_simulation
 import cluster_manager
+
+#logging.basicConfig(level=logging.INFO)
+#logging.info("clustering_simulation module imported")
 
 
 # Define a dummy Cluster class to simulate the clusters used in your algorithm
