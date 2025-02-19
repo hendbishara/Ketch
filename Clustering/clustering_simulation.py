@@ -4,7 +4,7 @@ import db_methods
 from cluster_manager import ClusterManager
 import Send_note
 #from routing import RoutePlanner
-import openrouteservice
+#import openrouteservice
 
 API_KEY = "5b3ce3597851110001cf624801095298be2b4fd9aad1382911873455"
 
