@@ -1,0 +1,79 @@
+.request-order-container {
+    max-width: 500px;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background: #f9f9f9;
+  }
+  
+  .request-title {
+    text-align: left;
+    margin-bottom: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .item-group {
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    background: #fff;
+  }
+  
+  label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  input, textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .btn-add {
+    width: 100%;
+    background-color: #28a745;
+    color: white;
+    margin-bottom: 10px;
+  }
+  
+  .btn-add:hover {
+    background-color: #218838;
+  }
+  
+  .btn-remove {
+    width: 100%;
+    background-color: #dc3545;
+    color: white;
+    margin-top: 5px;
+  }
+  
+  .btn-remove:hover {
+    background-color: #c82333;
+  }
+  
+  .btn-primary {
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+  
