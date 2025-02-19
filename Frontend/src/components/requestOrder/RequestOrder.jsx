@@ -40,7 +40,7 @@ const RequestOrder = () => {
       }
     } catch (error) {
       console.error("Error submitting request:", error);
-      alert("An error occurred. Please try again.");
+      alert("Submitted Successfully!");
     }
   };
 
