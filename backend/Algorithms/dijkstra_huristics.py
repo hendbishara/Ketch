@@ -229,7 +229,7 @@ class AlgorithmAnalyzer:
 if __name__ == "__main__":
     # Define test parameters
     warehouse_coords = (40.7128, -74.0060)  # Example coordinates
-    cluster_sizes = [10, 20, 30, 40, 50, 100]
+    cluster_sizes = [10, 20, 30, 40, 50]
     max_capacities = [100, 200, 300]
     
     # Initialize analyzer
