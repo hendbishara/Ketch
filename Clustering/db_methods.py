@@ -9,83 +9,13 @@ geolocator = Nominatim(user_agent="geo_clustering")
 # Connection setup function (avoid repetition)
 def get_connection():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",      # Change this if you have a different MySQL user
-        password="Root2121!",  # Set your MySQL root password
-        database="geo_clustering"
+        host="turntable.proxy.rlwy.net",
+        user="root", 
+        password="QidNZDIznmxgXewmxVnbzMVkFVZoyHZs",  
+        database="railway",
+        port = 21931,
+        connection_timeout = 30
     )
-
-def add_user(name, email, address):
-    db = get_connection()
-    cursor = db.cursor()
-
-    # Check if the user with the provided email already exists
-    cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
-    existing_user = cursor.fetchone()
-
-    if existing_user:
-        print(f"User with email {email} already exists. Skipping user creation.")
-        cursor.close()
-        db.close()
-        return
-
-    # Get latitude and longitude
-    location = geolocator.geocode(address)
-    if location:
-        latitude, longitude = location.latitude, location.longitude
-
-        # Insert into the users table
-        sql = "INSERT INTO users (name, email, address, latitude, longitude) VALUES (%s, %s, %s, %s, %s)"
-        values = (name, email, address, latitude, longitude)
-        
-        cursor.execute(sql, values)
-        db.commit()
-        
-        print(f"User {name} added with coordinates ({latitude}, {longitude})")
-    else:
-        print(f"Could not geocode address: {address}")
-    
-    cursor.close()
-    db.close()
-
-def add_new_order(order_id, user_id, order_details, latitude, longitude):
-    """ Adds a new order only if it does not already exist in the database. """
-
-    db = get_connection()
-    cursor = db.cursor()
-
-    try:
-        # ✅ Step 1: Check if the order already exists
-        cursor.execute("SELECT id FROM orders WHERE id = %s", (order_id,))
-        existing_order = cursor.fetchone()
-
-        if existing_order:
-            print(f"Order {order_id} already exists. Skipping insertion.")
-            return  # Exit function if order already exists
-
-        # ✅ Step 2: Insert the new order
-        cursor.execute("""
-            INSERT INTO orders (id, user_id, order_details, timestamp)
-            VALUES (%s, %s, %s, NOW())
-        """, (order_id, user_id, order_details))
-
-        # ✅ Step 3: Update the user's coordinates in the users table
-        cursor.execute("""
-            UPDATE users SET latitude = %s, longitude = %s WHERE id = %s
-        """, (latitude, longitude, user_id))
-
-        # ✅ Commit changes
-        db.commit()
-        print(f"New order {order_id} for user {user_id} added successfully.")
-
-    except Exception as e:
-        db.rollback()
-        print(f"Database error: {e}")
-
-    finally:
-        cursor.close()
-        db.close()
-
 
 
 def get_order_capacity(order_id):
@@ -93,12 +23,18 @@ def get_order_capacity(order_id):
     connection = get_connection()  # Replace with actual DB connection
 
     cursor = connection.cursor()
+    
+    query = """SELECT ri.req_id, SUM(i.capacity * ri.quantity) AS total_capacity
+            FROM request_items ri
+            JOIN items i ON ri.item_id = i.item_id
+            WHERE req_id = %s
+            GROUP BY ri.req_id;"""
 
     try:
-        cursor.execute("SELECT order_details FROM orders WHERE id = %s", (order_id,))
+        cursor.execute(query, (order_id,))
         result = cursor.fetchone()
         if result:
-            return int(result[0])  # Convert to integer capacity
+            return int(result[1])  # Convert to integer capacity
         return None  # Default capacity if not found
     except mysql.connector.Error as e:
         print(f"Database error: {e}")
@@ -121,15 +57,15 @@ def get_all_users():
 
     return users
 
-def get_all_orders():
+def get_all_orders(store_id):
     # Connect to your MySQL database
     db = get_connection()
     cursor = db.cursor()
 
     # SQL query to fetch all orders with order_id, user_id, latitude, and longitude
     cursor.execute("""
-        SELECT id, user_id FROM orders
-    """)
+        SELECT req_id, user_id FROM active_requests WHERE store_id = %s
+    """,(store_id,))
     
     # Fetch all the results
     orders = cursor.fetchall()
@@ -139,67 +75,14 @@ def get_all_orders():
 
     return orders
 
-def get_user_address(user_id):
-    db = get_connection()
-
-    cursor = db.cursor()
-    cursor.execute("SELECT address FROM users WHERE id = %s", (user_id,))
-    address = cursor.fetchone()
-
-    cursor.close()
-    db.close()
-
-    return address[0] if address else None
-
-def get_user_addresses():
-    db = get_connection()
-    cursor = db.cursor()
-    
-    cursor.execute("SELECT id, address FROM users")
-    user_addresses = {user_id: address for user_id, address in cursor.fetchall()}
-
-    cursor.close()
-    db.close()
-
-    return user_addresses
 
 
-def get_user_locations():
-    conn = get_connection()  # Make sure to use your connection method
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT id, latitude, longitude FROM users")
-    user_locations = {}
-
-    for user_id, latitude, longitude in cursor.fetchall():
-        user_locations[user_id] = (latitude, longitude)
-
-    return user_locations
-
-def get_user_locations_vis():
-    conn = get_connection()
-    cursor = conn.cursor()
-    
-    # Query to fetch user locations (address, latitude, longitude)
-    cursor.execute("SELECT id, address, latitude, longitude FROM users")
-    rows = cursor.fetchall()
-    
-    user_locations = {}
-    
-    for row in rows:
-        user_id, address, latitude, longitude = row
-        user_locations[user_id] = (address, (latitude, longitude))
-    
-    cursor.close()
-    conn.close()
-    
-    return user_locations
 def get_user_id_from_order(order_id):
     conn = get_connection()
     cursor = conn.cursor()
     
     # Query to fetch user locations (address, latitude, longitude)
-    cursor.execute("SELECT user_id FROM orders where id = %s",(order_id,))
+    cursor.execute("SELECT user_id FROM active_requests where req_id = %s",(order_id,))
     result = cursor.fetchone()
     cursor.close()
     conn.close()
@@ -212,7 +95,7 @@ def get_address_for_user(user_id):
     conn = get_connection()  # Using your existing database connection method
     cursor = conn.cursor()
 
-    cursor.execute("SELECT address FROM users WHERE id = %s", (user_id,))
+    cursor.execute("SELECT location FROM users WHERE user_id = %s", (user_id,))
     result = cursor.fetchone()
 
     if result:
@@ -224,35 +107,23 @@ def get_user_coordinates(user_id):
     conn = get_connection()  # Assuming you're using your existing database connection
     cursor = conn.cursor()
 
-    cursor.execute("SELECT latitude, longitude FROM users WHERE id = %s", (user_id,))
+    cursor.execute("SELECT location FROM users WHERE user_id = %s", (user_id,))
     result = cursor.fetchone()
 
     if result:
-        return result  # Return the latitude and longitude as a tuple
+        try:
+            location = geolocator.geocode(result)
+            if location is None:
+                raise Exception(f"invalid location for user:{user_id}")
+            
+        except Exception as e:
+            print("invalid location")
+            return None
+            
+        
+        return (location.latitude,location.longitude)  # Return the latitude and longitude as a tuple
     return None  # Return None if no coordinates are found for that user
 
-def update_order_details_with_random_values():
-    """ Updates all order_details values with a random number between 0 and 15 """
-    connection = get_connection()  # Replace with actual DB connection
-    cursor = connection.cursor()
-
-    try:
-        cursor.execute("SELECT id FROM orders")  # Get all order IDs
-        orders = cursor.fetchall()
-
-        for (order_id,) in orders:
-            random_value = random.randint(1, 6)  # Generate a random number
-            cursor.execute("UPDATE orders SET order_details = %s WHERE id = %s", (random_value, order_id))
-
-        connection.commit()  # Save changes
-        print("Updated all order_details with random values.")
-
-    except mysql.connector.Error as e:
-        print(f"Database error: {e}")
-    
-    finally:
-        cursor.close()
-        connection.close()
 
 
 def get_items_below_capacity(max_capacity):
@@ -260,13 +131,14 @@ def get_items_below_capacity(max_capacity):
     connection = get_connection()  # Your database connection method
     cursor = connection.cursor(dictionary=True)
     
-    cursor.execute("SELECT name, capacity FROM items WHERE capacity <= %s", (max_capacity,))
+    cursor.execute("SELECT item_id, capacity FROM items WHERE capacity <= %s", (max_capacity,))
     items = cursor.fetchall()
 
     cursor.close()
     connection.close()
     return items
 
+#TODO: fix for new data base
 def get_users_in_radius(center_coordinates, radius_km):
     """ Fetch users within the given radius. (Assuming geolocation in DB) """
     connection = get_connection()
@@ -289,68 +161,59 @@ def get_users_in_radius(center_coordinates, radius_km):
     return users
 
 
-def create_items_table():
-    """Creates an 'items' table and inserts sample items with capacities between 1 and 3."""
-    try:
-        # Establish database connection (Modify these credentials for your setup)
-        db = get_connection()
-        cursor = db.cursor()
-
-        # Create the items table if it does not exist
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS items (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                capacity INT CHECK (capacity BETWEEN 1 AND 3)
-            );
-        """)
-
-        # Sample items to insert (all with capacity < 4)
-        sample_items = [
-            ("Laptop", 3),
-            ("Smartphone", 2),
-            ("Book", 1),
-            ("Tablet", 2),
-            ("Camera", 3),
-            ("Headphones", 1),
-            ("Smartwatch", 2),
-            ("Gaming Console", 3)
-        ]
-
-        # Insert items into the table
-        cursor.executemany("INSERT INTO items (name, capacity) VALUES (%s, %s);", sample_items)
-
-        # Commit changes
-        db.commit()
-        print("Items table created and sample items inserted successfully!")
-
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-
-    finally:
+def get_active_stores():
+        """Get all active stores from the database"""
+        
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+        
+        query = """
+        SELECT store_id, store_name, warehouse_location, total_capacity
+        FROM stores
+        WHERE store_id IN (SELECT store_id FROM active_requests);
+        """
+        
+        cursor.execute(query)
+        stores = cursor.fetchall()
+        
         cursor.close()
-        db.close()
+        connection.close()
+        
+        return stores
+        
+        
+        
+        
+def update_cluster_id(req_id,cluster_id):
+    """update cluster id for the specific req_id"""
+    
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    
+    query = """UPDATE active_requests SET cluster_id = %s WHERE req_id = %s"""
+    
+    cursor.execute(query,(cluster_id,req_id))
+    
+    cursor.close()
+    connection.close()
+
+def get_clusters(store_id):
+    """get for all req_ids cluster_ids for the specific store"""
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    
+    query = """SELECT req_id cluster_id user_id FROM active_requests WHERE store_id = %s"""
+    
+    cursor.execute(query,(store_id,))
+    
+    result = cursor.fetchall()
+    
+    cursor.close()
+    connection.close()
+    
+    return result
+    
+        
 
 
-
-
-'''
-def create_orders_for_all_users():
-    # Retrieve all users
-    users = get_all_users()
-
-    # Generate orders for each user
-    for user in users:
-        user_id, name, email, address, latitude, longitude = user
-        order_details = f"Order details for {name} at {address}"
-
-        # Generate order id (for simplicity, we'll use user_id as order_id)
-        order_id = user_id  # You can modify this to generate an actual unique order_id
-
-        # Add the order to the database
-        add_new_order(order_id, user_id, order_details, latitude, longitude)
-
-        print(f"Order created for {name} with user ID {user_id}.")
-
-'''
 
