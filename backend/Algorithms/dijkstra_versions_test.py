@@ -3,6 +3,26 @@ import time
 import networkx as nx
 import matplotlib.pyplot as plt
 from Dijkstra import Modified_Dijkstra
+import sys
+import os
+import logging
+
+
+
+
+# Get absolute path to Clustering/
+clustering_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../Clustering"))
+
+# Add to sys.path
+sys.path.append(clustering_path)
+
+# Now import the module
+import clustering_simulation
+import cluster_manager
+
+#logging.basicConfig(level=logging.INFO)
+#logging.info("clustering_simulation module imported")
+
 
 # Define a dummy Cluster class to simulate the clusters used in your algorithm
 class Cluster:
@@ -27,12 +47,15 @@ warehouse_coords = (40.5, -73.5)
 # Generate 10 test clusters
 test_clusters = generate_test_clusters(20)
 
+simulation = clustering_simulation.Simulation(cluster_manager.ClusterManager(1, 20))
+clusters = simulation.run_clustering()
+
 # Initialize the Modified Dijkstra object
 max_capacity = 100  # Define a max capacity limit
-dijkstra_test_V1 = Modified_Dijkstra(test_clusters, max_capacity, warehouse_coords, "V1")
-dijkstra_test_V2 = Modified_Dijkstra(test_clusters, max_capacity, warehouse_coords, "V2")
-dijkstra_test_V3 = Modified_Dijkstra(test_clusters, max_capacity, warehouse_coords, "V3")
-dijkstra_test_Basic = Modified_Dijkstra(test_clusters,max_capacity, warehouse_coords, "Base")
+dijkstra_test_V1 = Modified_Dijkstra(clusters, max_capacity, warehouse_coords, "V1")
+dijkstra_test_V2 = Modified_Dijkstra(clusters, max_capacity, warehouse_coords, "V2")
+dijkstra_test_V3 = Modified_Dijkstra(clusters, max_capacity, warehouse_coords, "V3")
+dijkstra_test_Basic = Modified_Dijkstra(clusters,max_capacity, warehouse_coords, "Base")
 
 def time_algorithm(func, name):
     start_time = time.time()
@@ -47,6 +70,9 @@ def plot_graph(graph, title):
     nx.draw(graph, pos, with_labels=True, node_color='lightblue', edge_color='gray')
     plt.title(title)
     plt.show()
+
+
+
 
 # Run and compare algorithms
 #print("Running Baseline Algorithm...")

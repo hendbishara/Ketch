@@ -20,8 +20,8 @@ class Simulation:
 
 
 # Simulation usage:
-simulation = Simulation(ClusterManager(1, 20))
-clusters = simulation.run_clustering()
+#simulation = Simulation(ClusterManager(1, 20))
+#clusters = simulation.run_clustering()
 #planner = RoutePlanner(API_KEY, simulation.cluster_manager)
 #planner.build_graph()
 # Example Usage

@@ -25,10 +25,10 @@ class Modified_Dijkstra:
         """base line algorithm that combines orders in each cluster, used to have a base line comparison for the huiristic calculations using the different versions of dijkstra"""
         for cluster in self.clusters:
             self.orders.append(("WareHouse", cluster.id))
-            self.total_orders_capacity.append(cluster.capacity)
+            self.total_orders_capacity.append(cluster.total_capacity)
             dist = distance(self.warehouse_coords,cluster.coordinates).km
             self.total_orders_dist.append(dist)
-            self.total_orders_loss.append(dist/cluster.capacity)
+            self.total_orders_loss.append(dist/cluster.total_capacity)
         
       
     def create_graph_from_clusters(self):
@@ -43,14 +43,14 @@ class Modified_Dijkstra:
         self.g.add_node("WareHouse", capacity = 0,path_C = 0, path_d = 0, loss = 0, pi = None, coords = self.warehouse_coords)
         for c in self.clusters:
             #check if node is full, add it as an order
-            if(c.capacity >= self.max_c):
+            if(c.total_capacity >= self.max_c):
                 self.orders.append(("Warhouse",c))
-                self.total_orders_capacity.append(c.capacity)
+                self.total_orders_capacity.append(c.total_capacity)
                 dist = distance(self.warehouse_coords,c.coordinates).km
                 self.total_orders_dist.append(dist)
-                self.total_orders_loss.append(dist/c.capacity)
+                self.total_orders_loss.append(dist/c.total_capacity)
                 continue #dont add node to the graph
-            self.g.add_node(c.id, capacity = c.capacity, path_C = 0, path_d = math.inf, loss = math.inf, pi = None, coords = c.coordinates)
+            self.g.add_node(c.id, capacity = c.total_capacity, path_C = 0, path_d = math.inf, loss = math.inf, pi = None, coords = c.coordinates)
 
         for node in self.g.nodes():
             for node2 in self.g.nodes():
