@@ -24,21 +24,25 @@ def get_order_capacity(order_id):
 
     cursor = connection.cursor()
     
-    query = """SELECT ri.req_id, SUM(i.capacity * ri.quantity) AS total_capacity
-            FROM request_items ri
-            JOIN items i ON ri.item_id = i.item_id
-            WHERE req_id = %s
-            GROUP BY ri.req_id;"""
+    query = """SELECT ar.req_id, ar.store_id, SUM(ri.quantity * i.capacity) as total_capacity
+    FROM 
+        active_requests ar
+        JOIN request_items ri ON ar.req_id = ri.req_id
+        JOIN items i ON ri.item_id = i.item_id AND ar.store_id = i.store_id
+    WHERE 
+        ar.req_id = %s
+    GROUP BY 
+        ar.req_id, ar.store_id;"""
 
     try:
         cursor.execute(query, (order_id,))
         result = cursor.fetchone()
         if result:
-            return int(result[1])  # Convert to integer capacity
-        return None  # Default capacity if not found
+            return int(result[2])  # Convert to integer capacity
+        return 0  # Default capacity if not found
     except mysql.connector.Error as e:
         print(f"Database error: {e}")
-        return None
+        return 0
     finally:
         cursor.close()
         connection.close()
@@ -62,9 +66,9 @@ def get_all_orders(store_id):
     db = get_connection()
     cursor = db.cursor()
 
-    # SQL query to fetch all orders with order_id, user_id, latitude, and longitude
+    # SQL query to fetch all orders with order_id, user_id
     cursor.execute("""
-        SELECT req_id, user_id FROM active_requests WHERE store_id = %s
+        SELECT req_id, user_id FROM active_requests WHERE store_id = %s and status = 0
     """,(store_id,))
     
     # Fetch all the results
@@ -190,19 +194,24 @@ def update_cluster_id(req_id,cluster_id):
     connection = get_connection()
     cursor = connection.cursor(dictionary=True)
     
-    query = """UPDATE active_requests SET cluster_id = %s WHERE req_id = %s"""
-    
-    cursor.execute(query,(cluster_id,req_id))
-    
-    cursor.close()
-    connection.close()
+    try:
+        query = """UPDATE active_requests SET cluster_id = %s WHERE req_id = %s"""
+        cursor.execute(query,(cluster_id,req_id))
+        connection.commit()  # Add this line to commit the changes
+        print(f"Updated cluster_id to {cluster_id} for request {req_id}")  # Add logging
+    except mysql.connector.Error as e:
+        print(f"Error updating cluster_id: {e}")
+        connection.rollback()  # Rollback on error
+    finally:
+        cursor.close()
+        connection.close()
 
 def get_clusters(store_id):
     """get for all req_ids cluster_ids for the specific store"""
     connection = get_connection()
     cursor = connection.cursor(dictionary=True)
     
-    query = """SELECT req_id cluster_id user_id FROM active_requests WHERE store_id = %s"""
+    query = """SELECT req_id, cluster_id, user_id FROM active_requests WHERE store_id = %s"""
     
     cursor.execute(query,(store_id,))
     
@@ -212,8 +221,96 @@ def get_clusters(store_id):
     connection.close()
     
     return result
+
+
+def get_order_time(order):
+    """get time stamp of order and max waiting time"""
     
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    
+    query = """SELECT time_stamp, max_wait FROM active_requests WHERE req_id = %s"""
+         
+
+    cursor.execute(query,(order,))
+    
+    result = cursor.fetchone()
+    
+    cursor.close()
+    connection.close()
+    
+    return result[0], result[1]
+
+
+def update_cluster(id, coordinates):
+    """Update cluster's coordinates using MySQL POINT type."""
+    
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    
+    try:
+        # Ensure the coordinates are valid numbers
+        if not all(isinstance(coord, (int, float)) for coord in coordinates):
+            raise ValueError(f"Invalid coordinates: {coordinates}")
         
+        # Format the coordinates for the POINT type
+        point_str = f"POINT({coordinates[0]} {coordinates[1]})"
+        print(f"Updating cluster {id} with POINT: {point_str}")
+        
+        query = """INSERT INTO clusters (cluster_id, centroid) 
+                   VALUES (%s, ST_GeomFromText(%s)) 
+                   ON DUPLICATE KEY UPDATE centroid = ST_GeomFromText(%s)"""
+        
+        cursor.execute(query, (id, point_str, point_str))
+        connection.commit()
+        
+        print(f"Successfully updated cluster {id} with coordinates {coordinates}")
+        
+    except (mysql.connector.Error, ValueError) as e:
+        print(f"Error updating cluster_coordinates: {e}")
+        connection.rollback()
+        
+    finally:
+        cursor.close()
+        connection.close()
 
 
+def reset_clusters():
+    """Reset clusters table"""
+    
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    
+    query = """TRUNCATE TABLE clusters"""
+    
+    cursor.execute(query)
+    connection.commit()
+    
+    cursor.close()
+    connection.close()
 
+def get_cluster_centroid(clus_id):
+    """Retrieve the centroid as a tuple using ST_X and ST_Y."""
+    
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    
+    try:
+        query = """SELECT ST_X(centroid) AS x, ST_Y(centroid) AS y 
+                   FROM clusters WHERE cluster_id = %s"""
+        cursor.execute(query, (cluster_id,))
+        result = cursor.fetchone()
+        
+        if result and result['x'] is not None and result['y'] is not None:
+            return (result['x'], result['y'])
+        
+        print(f"No centroid found for cluster {cluster_id}")
+        return None
+    
+    except mysql.connector.Error as e:
+        print(f"Error fetching centroid: {e}")
+        return None
+        
+    finally:
+        cursor.close()
+        connection.close()

@@ -30,6 +30,7 @@ class ClusterManager:
     
     def __init__(self, radius_km, max_capacity,store_id, db_connection=None):
         self.radius_km = radius_km
+        #self.max_capacity = 1000
         self.max_capacity = max_capacity  # Maximum capacity constraint
         self.clusters = []  # List of Cluster objects
         self.db_connection = db_connection  # Database connection
@@ -37,7 +38,7 @@ class ClusterManager:
 
     def build_clusters(self):
         """ Builds clusters from scratch based on existing orders """
-        orders = get_all_orders(self.store_id)  # Fetch all orders
+        orders = get_all_orders(self.store_id)  or 0 # Fetch all orders
         self.clusters = []  # Reset clusters
         ClusterManager.global_cluster_id = 1  # Reset global cluster ID
 
@@ -65,13 +66,10 @@ class ClusterManager:
             
             distance = geodesic(order_coord, cluster.coordinates).km
             print(f"Distance from order {order_id} to cluster {cluster.id}: {distance} km")
-            distance = geodesic(order_coord, cluster.coordinates).km
-            print(f"Distance from order {order_id} to cluster {cluster.id}: {distance} km")
 
             if distance <= self.radius_km:
                 cluster.add_order(order_id, order_capacity)
                 added_to_cluster = True
-                print(f"Added order {order_id} to existing cluster {cluster.id}")
                 print(f"Added order {order_id} to existing cluster {cluster.id}")
                 break
 
@@ -80,7 +78,6 @@ class ClusterManager:
             new_cluster = Cluster(order_coord, order_id, order_capacity,self.global_cluster_id)
             self.global_cluster_id += 1
             self.clusters.append(new_cluster)
-            print(f"Created new cluster {new_cluster.id} for order {order_id}")
             print(f"Created new cluster {new_cluster.id} for order {order_id}")
 
     def get_clusters(self):
@@ -100,9 +97,9 @@ class ClusterManager:
                 if cluster.id == clus_id:
                     cluster.add_order(req_id,cap)
                 else:
-                    order_coord = get_user_coordinates(req['user_id'])
-                    new_cluster = Cluster(order_coord, req_id, cap,self.global_cluster_id)
-                    self.global_cluster_id += 1
+                    centroid = get_cluster_centroid(clus_id)
+                    new_cluster = Cluster(centroid, req_id, cap,clus_id)
+                    self.global_cluster_id +=1
                     self.clusters.append(new_cluster) 
         for new_req in new_reqs:
             order_coord = get_user_coordinates(new_req['user_id'])
@@ -120,23 +117,19 @@ class ClusterManager:
         # Center the map around the first cluster's centroid
         first_cluster = self.clusters[0]
         map_center = first_cluster.coordinates
-        map_center = first_cluster.coordinates
         map_obj = folium.Map(location=map_center, zoom_start=12)
 
         # Iterate through each cluster to add markers and lines
         for cluster in self.clusters:
             if cluster.coordinates:
-            if cluster.coordinates:
                 # ✅ Add a red circle marker for the cluster centroid
                 folium.CircleMarker(
-                    location=cluster.coordinates,
                     location=cluster.coordinates,
                     radius=10,  # Bigger for better visibility
                     color='red',
                     fill=True,
                     fill_color='red',
                     fill_opacity=0.8,
-                    popup=f"Cluster ID: {cluster.id}\nTotal Capacity: {cluster.total_capacity}"
                     popup=f"Cluster ID: {cluster.id}\nTotal Capacity: {cluster.total_capacity}"
                 ).add_to(map_obj)
 
@@ -161,7 +154,6 @@ class ClusterManager:
 
                 # ✅ Draw a line between the order and the cluster centroid
                 folium.PolyLine(
-                    [user_coord, cluster.coordinates],  # Order → Centroid
                     [user_coord, cluster.coordinates],  # Order → Centroid
                     color="blue",
                     weight=2.5,
