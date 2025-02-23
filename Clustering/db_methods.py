@@ -107,6 +107,7 @@ def get_address_for_user(user_id):
     return None
 
 # In db_methods.py
+'''
 def get_user_coordinates(user_id):
     conn = get_connection()  # Assuming you're using your existing database connection
     cursor = conn.cursor()
@@ -127,6 +128,46 @@ def get_user_coordinates(user_id):
         
         return (location.latitude,location.longitude)  # Return the latitude and longitude as a tuple
     return None  # Return None if no coordinates are found for that user
+'''
+
+def get_user_coordinates(user_id):
+    """Fetch latitude and longitude for a given user from the database."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT latitude, longitude FROM users WHERE user_id = %s", (user_id,))
+    result = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if result and result[0] is not None and result[1] is not None:
+        return result  # (latitude, longitude)
+    return None  # Return None if no coordinates found
+
+def get_store_coordinates(store_id):
+    """Get store coordinates from the database"""
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    
+    query = """
+    SELECT latitude, longitude 
+    FROM stores 
+    WHERE store_id = %s
+    """
+    
+    try:
+        cursor.execute(query, (store_id,))
+        result = cursor.fetchone()
+        if result and result['latitude'] is not None and result['longitude'] is not None:
+            return result['latitude'],result['longitude']
+        return None
+    except mysql.connector.Error as e:
+        print(f"Database error in get_store_coordinates: {e}")
+        return None
+    finally:
+        cursor.close()
+        connection.close()
 
 
 
@@ -143,6 +184,7 @@ def get_items_below_capacity(max_capacity):
     return items
 
 #TODO: fix for new data base
+#DONE!
 def get_users_in_radius(center_coordinates, radius_km):
     """ Fetch users within the given radius. (Assuming geolocation in DB) """
     connection = get_connection()
@@ -150,7 +192,7 @@ def get_users_in_radius(center_coordinates, radius_km):
 
     lat, lon = center_coordinates
     query = """
-        SELECT name, email
+        SELECT user_id
         FROM users
         WHERE ST_Distance_Sphere(
             point(longitude, latitude),
@@ -172,7 +214,7 @@ def get_active_stores():
         cursor = connection.cursor(dictionary=True)
         
         query = """
-        SELECT store_id, store_name, warehouse_location, total_capacity
+        SELECT store_id, store_name, warehouse_location, total_capacity, latitude, longitude
         FROM stores
         WHERE store_id IN (SELECT store_id FROM active_requests);
         """
@@ -224,30 +266,134 @@ def get_clusters(store_id):
 
 
 def get_order_time(order):
-    """get time stamp of order and max waiting time"""
+    """Get timestamp of order and max waiting time."""
+    
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    query = """SELECT time_stamp, max_wait FROM active_requests WHERE req_id = %s"""
+    cursor.execute(query, (order,))
+    
+    result = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    if result is None:
+        print(f"Error: No order found with req_id {order}")
+        return None, None  # Return safe values instead of crashing
+
+    return result["time_stamp"], result["max_wait"]
+
+def get_requests(store_id):
+    """get all requests for the specific store"""
     
     connection = get_connection()
     cursor = connection.cursor(dictionary=True)
     
-    query = """SELECT time_stamp, max_wait FROM active_requests WHERE req_id = %s"""
-         
+    query = """SELECT req_id, user_id, cluster_id FROM active_requests WHERE store_id = %s and status = 0"""
+    
+    cursor.execute(query,(store_id,))
+    
+    result = cursor.fetchall()
+    
+    cursor.close()
+    connection.close()
+    
+    return result
 
-    cursor.execute(query,(order,))
+def get_price_for_store(store):
+    """Fetch the price for a specific store"""
+    
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    
+    query = """SELECT delivery_fee FROM stores WHERE store_id = %s"""
+    
+    cursor.execute(query,(store,))
     
     result = cursor.fetchone()
     
     cursor.close()
     connection.close()
     
-    return result[0], result[1]
+    return result["delivery_fee"]
 
+def update_final_price(req_id,price):
+    """update the final price for the specific request"""
+    
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    
+    try:
+        query = """UPDATE active_requests SET final_delivery_fee = %s WHERE req_id = %s"""
+        cursor.execute(query,(price,req_id))
+        connection.commit()  # Add this line to commit the changes
+        print(f"Updated final price to {price} for request {req_id}")  # Add logging
+    except mysql.connector.Error as e:
+        print(f"Error updating final price: {e}")
+        connection.rollback()  # Rollback on error
+    finally:
+        cursor.close()
+        connection.close()
 
+def update_combined_orders_in_db(orders,clusters):
+    conn = get_connection()
+    cursor = conn.cursor()
+    for order in orders:
+        comb_ord_id = get_last_combined_order_id() + 1
+        for cluster in order:
+            if cluster == "WareHouse":
+                continue
+            else:
+                for ord in cluster.orders:
+                    update_active_order(ord.req_id,comb_ord_id)
+                    update_order_status(ord.req_id,1)
+    conn.commit()
+    cursor.close()
+    conn.close()
+                
+def get_last_combined_order_id():
+     # Get the last order_id from the table (or start from 1 if empty)
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT MAX(order_id) FROM combined_orders")
+    last_order_id = cursor.fetchone()[0]  # Fetch the max order_id
+    last_order_id = last_order_id if last_order_id is not None else 0  # Avoid None issue
+    cursor.close()
+    conn.close()
+    return last_order_id
+
+def update_active_order(req_id,comb_ord_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    query = "INSERT INTO combined_orders (order_id, req_id) VALUES (%s, %s)"
+
+    cursor.execute(query, (comb_ord_id, req_id))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+def update_order_status(req_id,status):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    query = "UPDATE active_requests SET status = %s WHERE req_id = %s"
+
+    cursor.execute(query, (status, req_id))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+'''
 def update_cluster(id, coordinates):
     """Update cluster's coordinates using MySQL POINT type."""
     
     connection = get_connection()
     cursor = connection.cursor(dictionary=True)
-    
     try:
         # Ensure the coordinates are valid numbers
         if not all(isinstance(coord, (int, float)) for coord in coordinates):
@@ -273,6 +419,34 @@ def update_cluster(id, coordinates):
     finally:
         cursor.close()
         connection.close()
+'''
+
+def update_cluster(id, coordinates):
+    """Update cluster's latitude and longitude in the clusters table."""
+    latitude, longitude = coordinates
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    
+    try:
+        print(f"Updating cluster {id} with Latitude: {latitude}, Longitude: {longitude}")
+        
+        query = """INSERT INTO clusters (cluster_id, latitude, longitude) 
+                   VALUES (%s, %s, %s) 
+                   ON DUPLICATE KEY UPDATE latitude = VALUES(latitude), longitude = VALUES(longitude)"""
+        
+        cursor.execute(query, (id, latitude, longitude))
+        connection.commit()
+        
+        print(f"Successfully updated cluster {id} with latitude={latitude}, longitude={longitude}")
+        
+    except (mysql.connector.Error, ValueError) as e:
+        print(f"Error updating cluster coordinates: {e}")
+        connection.rollback()
+        
+    finally:
+        cursor.close()
+        connection.close()
+
 
 
 def reset_clusters():
@@ -289,7 +463,7 @@ def reset_clusters():
     cursor.close()
     connection.close()
 
-def get_cluster_centroid(clus_id):
+def get_cluster_centroid(cluster_id):
     """Retrieve the centroid as a tuple using ST_X and ST_Y."""
     
     connection = get_connection()
@@ -314,3 +488,7 @@ def get_cluster_centroid(clus_id):
     finally:
         cursor.close()
         connection.close()
+
+
+
+

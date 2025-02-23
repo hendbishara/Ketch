@@ -25,8 +25,7 @@ class Cluster:
 
 
 class ClusterManager:
-    
-    global_cluster_id = 1  # Global counter for cluster IDs
+
     
     def __init__(self, radius_km, max_capacity,store_id, db_connection=None):
         self.radius_km = radius_km
@@ -35,12 +34,13 @@ class ClusterManager:
         self.clusters = []  # List of Cluster objects
         self.db_connection = db_connection  # Database connection
         self.store_id = store_id
+        self.global_cluster_id = 1  # Global counter for cluster IDs
 
     def build_clusters(self):
         """ Builds clusters from scratch based on existing orders """
-        orders = get_all_orders(self.store_id)  or 0 # Fetch all orders
+        orders = get_all_orders(self.store_id)  or [] # Fetch all orders
         self.clusters = []  # Reset clusters
-        ClusterManager.global_cluster_id = 1  # Reset global cluster ID
+        self.global_cluster_id = 1  # Reset global cluster ID
 
         for order in orders:
             req_id, user_id = order  # Extract order ID and user ID
@@ -84,28 +84,18 @@ class ClusterManager:
         return self.clusters
     
     def fetch_clusters(self):
-        requests = get_clusters(self.store_id)
-        new_reqs = []
+        """fetch new requests and add them to already available clusters or create a new cluster for them"""
+        print("curr cluster counter: " + str(self.global_cluster_id))
+        requests = get_requests(self.store_id)
         for req in requests:
             req_id = req['req_id']
             clus_id = req['cluster_id']
             cap = get_order_capacity(req_id)
             if clus_id == -1:
-                new_reqs.append(req)
-            
-            for cluster in self.clusters:
-                if cluster.id == clus_id:
-                    cluster.add_order(req_id,cap)
-                else:
-                    centroid = get_cluster_centroid(clus_id)
-                    new_cluster = Cluster(centroid, req_id, cap,clus_id)
-                    self.global_cluster_id +=1
-                    self.clusters.append(new_cluster) 
-        for new_req in new_reqs:
-            order_coord = get_user_coordinates(new_req['user_id'])
-            cap = get_order_capacity(new_req['req_id'])
-            self.add_order_to_cluster(new_req['req_id'], order_coord, cap)
-                
+                order_coord = get_user_coordinates(req['user_id'])
+                cap = get_order_capacity(req['req_id'])
+                self.add_order_to_cluster(req['req_id'], order_coord, cap)
+
             
 
 
