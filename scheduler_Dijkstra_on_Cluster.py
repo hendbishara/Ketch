@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, text
 from Clustering.cluster_manager import ClusterManager
 from backend.Algorithms.Dijkstra import Modified_Dijkstra
 from concurrent.futures import ThreadPoolExecutor
+'''
 from Clustering.db_methods import update_cluster_id
 from Clustering.db_methods import get_active_stores
 from Clustering.db_methods import get_order_time
@@ -19,6 +20,10 @@ from Clustering.db_methods import get_store_coordinates
 from Clustering.db_methods import update_combined_orders_in_db
 from Clustering.db_methods import get_price_for_store
 from Clustering.db_methods import update_final_price
+'''
+from Clustering.db_methods import DatabaseManager
+import mysql.connector
+from geopy.distance import geodesic
 from geopy.geocoders import Nominatim
 import threading
 from pytz import timezone
@@ -28,11 +33,27 @@ import signal
 
 
 version = "V1"
-radius = 1
+radius = 1.2
+
+show_map = False
+reset_clusters = False
+
+
+def get_connection():
+    return mysql.connector.connect(
+        host="turntable.proxy.rlwy.net",
+        user="root", 
+        password="QidNZDIznmxgXewmxVnbzMVkFVZoyHZs",  
+        database="railway",
+        port=21931,
+        connection_timeout=30,
+        autocommit=True  # Ensure auto-reconnect
+    )
 
 class MultiStoreDeliveryScheduler:
     def __init__(self):
         self.scheduler = BackgroundScheduler()
+        self.db_manager = DatabaseManager()
         self.setup_scheduler()
         self.stores_clusters_map = {}
         
@@ -40,83 +61,82 @@ class MultiStoreDeliveryScheduler:
         # Morning clustering job at 9 AM
         self.scheduler.add_job(
             self.process_all_stores_morning,
-            CronTrigger(hour=22, minute=23,timezone=timezone('Asia/Jerusalem'))
+            CronTrigger(hour=22, minute=17,timezone=timezone('Asia/Jerusalem'))
             
         )
         
         # Evening processing job at 9 PM
         self.scheduler.add_job(
             self.process_all_stores_evening,
-            CronTrigger(hour=22, minute=30,timezone=timezone('Asia/Jerusalem'))
+            CronTrigger(hour=22, minute=22,timezone=timezone('Asia/Jerusalem'))
         )
     
     
     
-    def process_store_morning(self, store: Dict):
+    def process_store_morning(self, store: Dict,connection):
         """Process morning clustering for a single store"""
+    
         print("processing morning stores")
         try:
             store_id = store['store_id']
             print(f"Processing morning clustering for store {store_id}")
             
-            #print(store)
             # Initialize clustering with store-specific parameters
-            clustering = ClusterManager(radius,store['total_capacity'],store_id)
-            self.stores_clusters_map[store_id] = clustering
-            #geolocator = Nominatim(user_agent="multi_store_scheduler")
-            #location = geolocator.geocode(store['warehouse_location'])
-            #location  = (store['latitude'],store['longitude']) if store['latitude'] and store['longitude'] else None
-            #if location is None:
-             #   raise Exception("Warehouse location not available!") 
-            
-            #store_location = (location.latitude,location.longitude)
-            #store_location = location
+            clustering = ClusterManager(radius,store['total_capacity'],store_id,self.db_manager,connection)
 
-            store_coordinates = get_store_coordinates(store_id)
+            self.stores_clusters_map[store_id] = clustering
+
+            store_coordinates = clustering.db_manager.get_store_coordinates(connection,store_id)
+            print(f"Store coordinates for store {store_id}: {store_coordinates}")
+
             if store_coordinates is None:
                 raise Exception(f"store{store_id} location not available!")
             
             # Create clusters for this store's orders
             clustering.build_clusters()
-            
+
+            if not clustering.clusters:
+                print(f"No clusters were created for store {store_id}")
+                return
+            if show_map:
+                clustering.create_map()
             # Update database with cluster assignments
+            '''
             for cluster in clustering.clusters:
-                update_cluster(cluster.id, cluster.coordinates)
-                price = self.calculate_price(cluster,store_id)
+                price = self.calculate_price(cluster,store_id,connection)
+                print(f"cluster coordinates: {cluster.coordinates}")
+                self.db_manager.update_cluster(connection,store_id, cluster.id, cluster.coordinates, len(cluster.orders),price)
                 for req_id in cluster.orders:
-                    update_cluster_id(req_id,cluster.id)
-                    update_final_price(req_id,price)
+                    self.db_manager.update_cluster_id(connection,req_id,cluster.id)
+                    self.db_manager.update_final_price(connection,req_id,price)
+            '''
+
             
-            #clustering.create_map()
+            
+            '''
             available_clusters = []
             for cluster in clustering.clusters:
                 if cluster.total_capacity < store['total_capacity']:
                     available_clusters.append(cluster)          
-            # Notify users about clustering results
-            #TODO: check which clusters are not at full capacity, present stores with items available in each cluster
-            # Notify users about available clusters and discounts
+            
             for cluster in available_clusters:
                 # Get users within the same radius of the cluster
-                users_in_radius = get_users_in_radius(cluster.coordinates, radius)
+                users_in_radius = self.db_manager.get_users_in_radius(connection,cluster.coordinates, radius)
                 
                 # Fetch items from the items table that match the capacity left in the cluster
-                items_in_cluster = get_items_below_capacity(cluster.total_capacity)
-                
-                # Prepare the notification message
-                
-                '''
-                # Send notifications to users
-                for user in users_in_radius:
-                    self.notify_user(user['email'], message)
-                 '''  
-            #notify users by email + show in frontend
+                items_in_cluster = self.db_manager.get_items_below_capacity(connection,cluster.total_capacity)
+            '''    
             
         except Exception as e:
             print(f"Error processing store {store_id} morning clustering: {e}")
             # Implement error handling and notifications
+            import traceback
+            print(f"Error processing store {store_id} morning clustering: {str(e)}")
+            print(traceback.format_exc()) # Print the full traceback for debugging
     
-    def process_store_evening(self, store: Dict):
+    def process_store_evening(self, store: Dict,connection):
         """Process evening routing for a single store"""
+        
         for key in self.stores_clusters_map.keys():
             print(key)
         try:
@@ -125,7 +145,7 @@ class MultiStoreDeliveryScheduler:
             
             #fetch clusters and add new requests to clusters
             if store_id not in self.stores_clusters_map.keys():
-                clustering = ClusterManager(radius,store['total_capacity'],store_id)
+                clustering = ClusterManager(radius,store['total_capacity'],store_id,self.db_manager,connection)
                 
             
             else:
@@ -135,26 +155,16 @@ class MultiStoreDeliveryScheduler:
                     print(f"cluster id: {cluster.id}")
                     print(f"cluster capacity{cluster.total_capacity}")
                 
-                    
-                    
-            
-            #print(clustering.global_cluster_id)
             clustering.fetch_clusters()
             
-            
-            #get clusters with cluster_capacity < max_capacity\3 and all orders still have time 
-            #TODO: implement this functionality
-            
-            #run dijkstra on clusters
-            #sleep(1)  
-            store_coordinates = get_store_coordinates(store_id)
+            store_coordinates = self.db_manager.get_store_coordinates(connection,store_id)
             print(store_coordinates)
             if store_coordinates is None:
                 raise Exception(f"Store {store_id} location not available!")
             
             #check clusters capacity and wait time and only send relevant clusters to dijkstra
             cap = store['total_capacity']
-            ready_clusters = self.check_cluster_capacity_and_time(clustering.clusters,cap)
+            ready_clusters = self.check_cluster_capacity_and_time(clustering.clusters,cap,connection)
             
             dijk = Modified_Dijkstra(ready_clusters, cap, store_coordinates, version)
             orders = dijk.get_orders()
@@ -163,22 +173,23 @@ class MultiStoreDeliveryScheduler:
                 print(list(l))
             
             #TODO: from orders make orders from cluster id send to stores and show to users in front end
-            update_combined_orders_in_db(orders,clustering.clusters)
+            self.db_manager.update_combined_orders_in_db(connection,orders,clustering.clusters)
             #TODO: implement pricing method, update delivery price in DB and show for user in frontend
             for cluster in clustering.clusters:
                 price = self.calculate_price(cluster,store_id)
                 for req_id in cluster.orders:
-                    update_final_price(req_id,price)
+                    self.db_manager.update_final_price(connection,req_id,price)
 
             #reset clusters table in DB
-            reset_clusters()
+            if reset_clusters:
+                self.db_manager.reset_clusters(connection)
             del self.stores_clusters_map[store_id]
             
         except Exception as e:
             print(f"Error processing store {store_id} evening routing: {e}")
             # Implement error handling and notifications
     
-    def check_cluster_capacity_and_time(self,clusters, max_capacity):
+    def check_cluster_capacity_and_time(self,clusters, max_capacity,connection):
         time_has_run_out = False
         send_clusters = []
         for cluster in clusters:
@@ -188,7 +199,7 @@ class MultiStoreDeliveryScheduler:
                 continue
             if cluster.total_capacity < max_capacity/3:
                 for order in cluster.orders:
-                    time_stamp, max_wait = get_order_time(order)
+                    time_stamp, max_wait = self.db_manager.get_order_time(connection,order)
                     if time_stamp is None or max_wait is None:
                         print(f"Skipping order {order} due to missing time_stamp or max_wait")
                         continue  # Skip this order safely
@@ -204,9 +215,16 @@ class MultiStoreDeliveryScheduler:
                 send_clusters.append(cluster)
         return send_clusters
                          
-    def calculate_price(self,cluster,store):
-        price_per_km = float(get_price_for_store(store))
-        dist = geodesic(cluster.coordinates,get_store_coordinates(store)).km
+    def calculate_price(self,cluster,store,connection):
+        price_per_km = float(self.db_manager.get_price_for_store(connection,store))
+
+        store_coordinates = self.db_manager.get_store_coordinates(connection, store)
+        print(f"DEBUG: Distance Calculation - Cluster {cluster.id} coordinates: {cluster.coordinates}, Store {store} coordinates: {store_coordinates}")
+
+
+        dist = geodesic(cluster.coordinates,store_coordinates).km
+        print(f"DEBUG: Distance Calculation - Cluster {cluster.id} coordinates: {cluster.coordinates}, Store {store} coordinates: {self.db_manager.get_store_coordinates(connection, store)}")
+
         number_of_participants = len(cluster.orders)
         return (price_per_km*dist)/number_of_participants
     
@@ -228,24 +246,27 @@ class MultiStoreDeliveryScheduler:
     
     
     def process_all_stores_morning(self):
+        connection = get_connection()
         """Process morning clustering for all stores in parallel"""
         print("in Process all stores morning!")
-        stores = get_active_stores()
+        stores = self.db_manager.get_active_stores(connection)
         
         for store in stores:
-            self.process_store_morning(store)
+            self.process_store_morning(store,connection)
             #sleep(1)  # Ensure at least 1 second between requests
         
         #with ThreadPoolExecutor(max_workers=min(len(stores), 10)) as executor:
         #    executor.map(self.process_store_morning, stores)
+        connection.close()
     
     def process_all_stores_evening(self):
         """Process evening routing for all stores in parallel"""
-        stores = get_active_stores()
+        connection = get_connection()
+        stores = self.db_manager.get_active_stores(connection)
         for store in stores:
-            self.process_store_evening(store)
+            self.process_store_evening(store,connection)
             #sleep(1)  # Ensure at least 1 second between requests
-
+        connection.close()
 
     
     def start(self):
