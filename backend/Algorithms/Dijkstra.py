@@ -7,76 +7,84 @@ from collections import deque
 
 
 class Modified_Dijkstra:
+    
     def __init__(self,clusters,max_capacity, warehouse_coords,version):
         #we assume that the clusters we recieve have the centroid coordinates of each cluster and the total capacity of each cluster and cluster ID
+        
         self.clusters = clusters
-        self.max_c = max_capacity
-        self.g = nx.DiGraph()
-        self.Q = []
+        self.max_c = max_capacity  # Maximum capacity allowed per path
+        self.g = nx.DiGraph()  
+        self.Q = [] # Priority queue for Dijkstra’s algorithm
         self.warehouse_coords = warehouse_coords
-        self.orders = []
-        self.total_orders_capacity = []
-        self.total_orders_dist = []
-        self.total_orders_loss = []
-        self.version = version
+        self.orders = [] # Stores the final delivery orders
+        self.total_orders_capacity = [] # Stores total capacity for each order
+        self.total_orders_dist = [] # Stores total distance for each order
+        self.total_orders_loss = []  # Stores the computed loss for each order
+        self.version = version # Specifies which version of Dijkstra to use
     
     
     def base_algo(self):
         """base line algorithm that combines orders in each cluster, used to have a base line comparison for the huiristic calculations using the different versions of dijkstra"""
         for cluster in self.clusters:
-            self.orders.append(("WareHouse", cluster.id))
-            self.total_orders_capacity.append(cluster.total_capacity)
+            self.orders.append(("WareHouse", cluster.id)) # Direct delivery from warehouse
+            self.total_orders_capacity.append(cluster.total_capacity) # Store cluster capacity
             dist = distance(self.warehouse_coords,cluster.coordinates).km
             self.total_orders_dist.append(dist)
-            self.total_orders_loss.append(dist/cluster.total_capacity)
+            self.total_orders_loss.append(dist/cluster.total_capacity) #compute loss
         
       
     def create_graph_from_clusters(self):
-        """initializes graph where each cluster is a node""" 
+        """initializes graph where each cluster is a node  
+        Nodes represent clusters, and edges represent the distance between clusters.
+        If a cluster exceeds `max_capacity`, it is directly assigned to the warehouse.""" 
         #make sure all fields are in initiale state
         self.total_orders_capacity = []
         self.total_orders_dist = []
         self.total_orders_loss = []
         self.g = nx.DiGraph() #initialize a new graph
         self.Q = []
-        #strat building grph
+        #strat building the graph
+        # Add warehouse as the starting node
         self.g.add_node("WareHouse", capacity = 0,path_C = 0, path_d = 0, loss = 0, pi = None, coords = self.warehouse_coords)
         for c in self.clusters:
-            #check if node is full, add it as an order
             if(c.total_capacity >= self.max_c):
+                # If cluster exceeds max capacity(full), treat it as an immediate order
                 self.orders.append(("WareHouse",c.id))
                 self.total_orders_capacity.append(c.total_capacity)
                 dist = distance(self.warehouse_coords,c.coordinates).km
                 self.total_orders_dist.append(dist)
                 self.total_orders_loss.append(dist/c.total_capacity)
-                continue #dont add node to the graph
+                continue # Do not add this cluster as a graph node
+
+            # Add cluster as a graph node
             self.g.add_node(c.id, capacity = c.total_capacity, path_C = 0, path_d = math.inf, loss = math.inf, pi = None, coords = c.coordinates)
 
-        for node in self.g.nodes():
+
+        for node in self.g.nodes(): # Add edges between nodes (clusters)
             for node2 in self.g.nodes():
                 tmp = distance(self.g.nodes[node]['coords'], self.g.nodes[node2]['coords']).kilometers
                 if node != node2 and node2 != "WareHouse":
                     self.g.add_edge(node,node2,weight = tmp)
-    
+    # Push the warehouse node to the priority queue
         heapq.heappush(self.Q,(0,"WareHouse"))
     
     def Dijkstra_version1(self):
-        """modified dijkstra version one, we run the modified dijkstra where the loss function is 
+        """modified dijkstra version 1, we run the modified dijkstra where the loss function is 
         path distance/ path capacity, to ensure distinct paths we filter the paths when combining the orders.
         returns a set of the combined orders"""
 
-        #initialize graph
+        # Initialize the graph
         self.create_graph_from_clusters()
         
         #initialize a set to keep track of visited nodes
-        visited = set()
+        visited = set()  # Track visited nodes
         
         
         while len(self.Q) != 0:
-            k , u_id = heapq.heappop(self.Q) #extract min
+            k , u_id = heapq.heappop(self.Q) #Extract the node with the smallest loss (extract min)
             #skip outdated or already processed entries
             if u_id in visited:
-                continue
+                continue 
             visited.add(u_id)
             #access the node's data
             u = self.g.nodes[u_id]
@@ -84,7 +92,7 @@ class Modified_Dijkstra:
             for v_id in self.g.neighbors(u_id):
                 #prevent cycles:
                 if v_id in visited:
-                    continue
+                    continue  
                 v = self.g.nodes[v_id]  # Access the neighboring node data
                 # Relaxation condition
                 new_path_C = u['path_C'] + v['capacity']
@@ -96,14 +104,14 @@ class Modified_Dijkstra:
                     v['loss'] = new_loss
                     v['path_C'] = new_path_C
                     v['path_d'] = new_path_d
-                    v['pi'] = u_id
+                    v['pi'] = u_id # Set parent node
                 
                     # Push the updated node to the priority queue
                     heapq.heappush(self.Q, (new_loss, v_id))
         self.combine_orders_V1(self.build_graph())
     
     def Dijkstra_version2(self):
-        """modified version of dijkstra that keeps track of nodes that where assigned aas parents, and does not allo two nodes to have the same parent unless its the warehouse
+        """modified version of dijkstra that keeps track of nodes that where assigned aas parents, and does not allow 2 nodes to have the same parent unless its the warehouse
         returns a set of the combined orders"""
         #initialize graph
         self.create_graph_from_clusters()
@@ -287,39 +295,6 @@ class Modified_Dijkstra:
             self.total_orders_dist.append(total_dist)
             self.total_orders_loss.append(total_loss)
             
-
-    
-    """
-    def combine_orders_V1(self,bfs_graph):
-        
-        
-        # go over all nodes, check if out degree > 1 
-        for node in bfs_graph.nodes():
-            if bfs_graph.out_degree(node)>1:
-                #go over each neighbor, check loss from warehouse and keep the edge with max loss from warehouse
-                max_loss = 0
-                max_node = None
-                for neighbor in  bfs_graph.successors(node):
-                    dist = self.g["WareHouse"][neighbor]['weight']
-                    capacity = self.g.nodes[neighbor]['capacity']
-                    curr_loss = dist / capacity
-                    if max_loss == 0:
-                        max_loss = curr_loss
-                        max_node = neighbor
-                    if curr_loss<max_loss:
-                        bfs_graph.remove_edge(node,neighbor)
-                        bfs_graph.add_edge("WareHouse",neighbor)
-                    elif max_node!=None:
-                        bfs_graph.remove_edge(node,max_node)
-                        bfs_graph.add_edge("WareHouse",max_node)
-                        max_loss = curr_loss
-                        max_node = neighbor
-        
-        
-        #we get a tree where no node that is not the warehouse hase an out degree > 1
-        #call on the combined_orders function
-        self.combined_orders(bfs_graph)
-    """
     
     def combine_orders_V1(self, bfs_graph):
         """Combine orders from the modified Dijkstra version 1 where one node can be a parent to more 
@@ -367,6 +342,9 @@ class Modified_Dijkstra:
 
         
     def get_orders(self):
+        """
+        Runs the selected algorithm version and returns the final order list.
+        """
         if self.version == "Base":
             self.base_algo()
         elif self.version == "V1":
@@ -382,6 +360,17 @@ class Modified_Dijkstra:
     
     
     def get_Avg_loss_on_nodes(self):
+        """
+    Computes the average loss for all nodes in the graph.
+
+    Loss is defined as: loss = total path distance / total path capacity.
+
+    Returns:
+    - The average loss value across all nodes in the graph.
+    - If the "Base" version is used, it calculates the average loss from precomputed total order losses.
+    """
+    # If using the baseline version, calculate the average loss from the total order losses
+
         if self.version == "Base":
             return sum([distance for distance in self.total_orders_loss]) / len(self.total_orders_loss)
         total_loss = 0
