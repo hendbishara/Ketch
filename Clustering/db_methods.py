@@ -17,21 +17,21 @@ class DatabaseManager:
                 connection_timeout=28800,
                 autocommit=True
             )
-            print("✅ New DB connection established.")
+            print("New DB connection established.")
             return connection
         except Exception as e:
-            print(f"❌ Error creating database connection: {e}")
+            print(f"Error creating database connection: {e}")
             return None
 
     def check_connection(self):
         """Check if connection is alive, reconnect if necessary."""
         try:
             if self.connection is None or not self.connection.is_connected():
-                print("🔄 Reconnecting to DB...")
+                print("Reconnecting to DB...")
                 self.connection = self.get_connection()
             return self.connection
         except Exception as e:
-            print(f"❌ Connection check failed: {e}")
+            print(f"Connection check failed: {e}")
             return None
 
     def execute_query(self, query, params=None, fetchone=False, fetchall=False, commit=False):
@@ -206,7 +206,6 @@ class DatabaseManager:
         self.connection = self.check_connection()
         query = "SELECT latitude, longitude FROM users WHERE user_id = %s"
         result = self.execute_query(query, (user_id,), fetchone=True)
-        print(f"DEBUG - get_user_coordinates for user_id {user_id}: {result}")
         
         if result is None:
             print(f"No coordinates found for user {user_id}")
@@ -271,20 +270,32 @@ class DatabaseManager:
         except mysql.connector.Error as e:
             print(f"Error updating final price: {e}")
             self.connection.rollback()  # Rollback on error
-
+    '''
     def update_combined_orders_in_db(self,orders,clusters):
 
         self.connection = self.check_connection()
-
-        for order in orders:
-            comb_ord_id = self.get_last_combined_order_id() + 1
-            print(f"Combining orders: {order} into combined order {comb_ord_id}")
-            for clus_id in order:
+        print(f"Updating combined orders in DB... Structure of orders: {type(orders)}")
+        print(f"Number of order groups: {len(orders)}")
+        print(f"First few order groups: {list(orders)[:3] if len(orders) >= 3 else list(orders)}")
+        
+        for order_idx, order in enumerate(orders):
+            # Get the last ID for each order explicitly
+            last_id_query = "SELECT MAX(order_id) as R FROM combined_orders"
+            result = self.execute_query(last_id_query, fetchone=True)
+            last_order_id = result['R'] if result['R'] is not None else 0
+            comb_ord_id = last_order_id + 1
+            
+            print(f"Order {order_idx+1}/{len(orders)}: Last ID = {last_order_id}, New ID = {comb_ord_id}")
+            print(f"Combining orders: {list(order)} into combined order {comb_ord_id}")
+            for clus_id in list(order):
                 if clus_id == "WareHouse":
                     continue
                 else:
+                    curr_clus = None
                     for cluster in clusters:
-                        if cluster.id == clus_id:
+                        print(f"Checking cluster {cluster.id} ")
+                        if int(cluster.id) == int(clus_id):
+                            print(f"Found cluster {clus_id} for order {order}")
                             curr_clus = cluster
                             break
                     for ord in curr_clus.orders:
@@ -292,25 +303,121 @@ class DatabaseManager:
                         self.update_active_order(ord,comb_ord_id)
                         self.update_order_status(ord,1)
                         self.update_date_of_proccessing(ord)
-
+    
+    def update_combined_orders_in_db(self, orders, clusters):
+        self.connection = self.check_connection()
+        print("Updating combined orders in DB...")
+        print(len(orders))
+        print("clusters size: ",len(clusters))
+        # Get the starting ID only once
+        last_id_query = "SELECT MAX(order_id) as R FROM combined_orders"
+        result = self.execute_query(last_id_query, fetchone=True)
+        base_order_id = result['R'] if result['R'] is not None else 0
+        
+        for order_idx, order in enumerate(list(orders)):
+            # Increment by the order index to ensure unique IDs
+            comb_ord_id = base_order_id + 1 + order_idx
+            
+            print(f"Combining orders: {list(order)} into combined order {comb_ord_id}")
+            
+            for clus_id in list(order):
+                if clus_id == "WareHouse":
+                    continue
+                else:
+                    curr_clus = None
+                    for cluster in clusters:
+                        print(f"Checking cluster {cluster.id} ")
+                        if int(cluster.id) == int(clus_id):
+                            print(f"Found cluster {clus_id} for order {order}")
+                            curr_clus = cluster
+                            break
+                    for ord in curr_clus.orders:
+                        print(f"Updating order {ord} to combined order {comb_ord_id}")
+                        self.update_active_order(ord, comb_ord_id)
+                        self.update_order_status(ord, 1)
+                        self.update_date_of_proccessing(ord)
+        
+        # Force a commit at the end to ensure all changes are saved
+        self.connection.commit()
+        '''
+    def update_combined_orders_in_db(self, orders, clusters):
+        self.connection = self.check_connection()
+        print("Updating combined orders in DB with direct approach...")
+        
+        # Get the starting ID only once
+        base_order_id = self.get_last_combined_order_id()
+        print(f"Base order ID: {base_order_id}")
+        
+        for order_idx, order in enumerate(orders):
+            # Increment by the order index to ensure unique IDs
+            comb_ord_id = base_order_id + 1 + order_idx
+            order_lst = list(order)
+            print(f"Processing combined order {comb_ord_id} for order group: {order_lst}")
+            
+            # Get all cluster IDs except "WareHouse"
+            cluster_ids = [clus_id for clus_id in order_lst if clus_id != "WareHouse"]
+            
+            if not cluster_ids:
+                print(f"No valid cluster IDs found in order {order_lst}")
+                continue
+                
+            print(f"Valid cluster IDs: {cluster_ids}")
+            
+            # For each cluster ID, get all orders directly from the database
+            for cluster_id in cluster_ids:
+                print(f"Getting orders for cluster {cluster_id}")
+                
+                # Query to get all order IDs for this cluster directly from the database
+                query = "SELECT req_id FROM active_requests WHERE cluster_id = %s AND status = 0"
+                orders_in_cluster = self.execute_query(query, (cluster_id,), fetchall=True)
+                
+                if not orders_in_cluster:
+                    print(f"No orders found for cluster {cluster_id}")
+                    continue
+                    
+                print(f"Found {len(orders_in_cluster)} orders in cluster {cluster_id}")
+                
+                # Process each order
+                for order_record in orders_in_cluster:
+                    req_id = order_record['req_id']
+                    print(f"Updating order {req_id} to combined order {comb_ord_id}")
+                    
+                    # Insert into combined_orders table
+                    insert_query = "INSERT INTO combined_orders (order_id, req_id) VALUES (%s, %s)"
+                    self.execute_query(insert_query, (comb_ord_id, req_id), commit=True)
+                    
+                    # Update status
+                    update_status_query = "UPDATE active_requests SET status = 1 WHERE req_id = %s"
+                    self.execute_query(update_status_query, (req_id,), commit=True)
+                    
+                    # Update processing date
+                    update_date_query = "UPDATE active_requests SET process_date = CURDATE() WHERE req_id = %s"
+                    self.execute_query(update_date_query, (req_id,), commit=True)
+                    
+                    print(f"Successfully updated order {req_id}")
+                
+            print(f"Completed processing for combined order {comb_ord_id}")
+        
+        # Final commit to ensure all changes are saved
+        self.connection.commit()
+        print("All database updates completed")
+    
     def get_last_combined_order_id(self):
         self.connection = self.check_connection()
         # Get the last order_id from the table (or start from 1 if empty)
-        query = "SELECT MAX(order_id) FROM combined_orders"
+        query = "SELECT MAX(order_id) as R FROM combined_orders"
         result=self.execute_query(query, fetchone=True)
-        last_order_id = result[0]  # Fetch the max order_id
+        last_order_id = result['R']  # Fetch the max order_id
         last_order_id = last_order_id if last_order_id is not None else 0  # Avoid None issue
         return last_order_id
 
     def update_active_order(self,req_id,comb_ord_id):
         self.connection = self.check_connection()
-
-
         query = "INSERT INTO combined_orders (order_id, req_id) VALUES (%s, %s)"
-
         self.execute_query(query, (comb_ord_id, req_id), commit=True)
 
     def update_date_of_proccessing(self,ord):
+        print("Updating date of processing for order")
         self.connection = self.check_connection()
-        query = "UPDATE active_requests SET proccess_date = CURDATE() WHERE req_id = %s"
+        query = "UPDATE active_requests SET process_date = CURDATE() WHERE req_id = %s"
         self.execute_query( query, (ord,), commit=True)

@@ -44,7 +44,7 @@ class Modified_Dijkstra:
         for c in self.clusters:
             #check if node is full, add it as an order
             if(c.total_capacity >= self.max_c):
-                self.orders.append(("Warhouse",c))
+                self.orders.append(("WareHouse",c.id))
                 self.total_orders_capacity.append(c.total_capacity)
                 dist = distance(self.warehouse_coords,c.coordinates).km
                 self.total_orders_dist.append(dist)
