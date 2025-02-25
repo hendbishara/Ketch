@@ -35,16 +35,13 @@ By integrating these components, we aim to enhance the efficiency of last-mile d
 ### 2️⃣ Order Clustering
 - Orders are grouped based on **geographic proximity** and **volume constraints**.
 - A **maximum delivery capacity** is imposed to prevent inefficient resource allocation.
-### 3️⃣ Modified Dijkstra’s Algorithm
-We implement **three variations** of Dijkstra’s algorithm to identify the most efficient shared delivery routes:
+### 3️⃣ Modified Dijkstra’s Algorithm  
+We implement three variations of Dijkstra’s algorithm to identify the most efficient shared delivery routes:  
 
 | Algorithm Version | Description |
 |-------------------|------------|
-| **Version 1 (V1)** | modified dijkstra version 1, we run the modified dijkstra where the loss function is 
-        path distance/ path capacity, to ensure distinct paths we filter the paths when combining the orders.
-        returns a set of the combined orders |
-| **Version 2 (V2)** | modified version of dijkstra that keeps track of nodes that where assigned aas parents, and does not allow 2 nodes to have the same parent unless its the warehouse
-        returns a set of the combined orders |
+| **Version 1 (V1)** | Modified Dijkstra version 1, where the loss function is **path distance / path capacity**. To ensure distinct paths, we filter the paths when combining the orders. Returns a set of combined orders. |
+| **Version 2 (V2)** | A modified version of Dijkstra that keeps track of nodes assigned as parents. It ensures that no two nodes share the same parent, except for the warehouse. Returns a set of combined orders. |
 | **Version 3 (V3)** | This version assigns each node a parent by selecting the neighbor with the **minimal loss** among all available paths, ensuring distinct paths. Returns a set of combined orders. |
 
 
