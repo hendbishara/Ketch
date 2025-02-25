@@ -13,7 +13,7 @@ class Modified_Dijkstra:
         
         self.clusters = clusters
         self.max_c = max_capacity  # Maximum capacity allowed per path
-        self.g = nx.DiGraph()  # Maximum capacity allowed per path
+        self.g = nx.DiGraph()  
         self.Q = [] # Priority queue for Dijkstra’s algorithm
         self.warehouse_coords = warehouse_coords
         self.orders = [] # Stores the final delivery orders

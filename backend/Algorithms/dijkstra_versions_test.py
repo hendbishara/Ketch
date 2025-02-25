@@ -20,16 +20,13 @@ sys.path.append(clustering_path)
 import clustering_simulation
 import cluster_manager
 
-#logging.basicConfig(level=logging.INFO)
-#logging.info("clustering_simulation module imported")
-
 
 # Define a dummy Cluster class to simulate the clusters used in your algorithm
 class Cluster:
     def __init__(self, cluster_id, coordinates, capacity):
         self.id = cluster_id
         self.coordinates = coordinates
-        self.capacity = capacity
+        self.total_capacity = capacity
 
 # Generate random test clusters
 def generate_test_clusters(num_clusters):
