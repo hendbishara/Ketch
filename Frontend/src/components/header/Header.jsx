@@ -1,26 +1,30 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "./header.css";
 import Container from 'react-bootstrap/Container';
-import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
-import NavDropdown from 'react-bootstrap/NavDropdown';
+import Nav from 'react-bootstrap/Nav';
 
-
-const Header = () => {
+const Header = ({ user }) => {
   return (
-    <div>
     <Navbar className="bg-body-tertiary">
-        <Container>
-            <Navbar.Brand href="#home" style={{fontSize: "3rem" , fontWeight: "bold"}}>Ketch</Navbar.Brand>
-            <Navbar.Toggle />
-            <Navbar.Collapse className="justify-content-end">
-            <Navbar.Text>
-                Signed in as: <a href="#login">Jad Mahajne</a>
-            </Navbar.Text>
-            </Navbar.Collapse>
-        </Container>
+      <Container>
+        <Navbar.Brand as={Link} to="/" style={{ fontSize: "3rem", fontWeight: "bold" }}>
+          Ketch
+        </Navbar.Brand>
+        <Navbar.Toggle />
+        <Navbar.Collapse className="justify-content-end">
+          <Nav>
+            <Nav.Link as={Link} to="/">Order Status</Nav.Link>
+            <Nav.Link as={Link} to="/nearby-orders">Nearby Orders</Nav.Link>
+            <Nav.Link as={Link} to="/request-order">Request Order</Nav.Link>
+            <Nav.Link as={Link} to="/login">
+              {user ? `Logged in as: ${user.name}` : "Login"}
+            </Nav.Link>
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
     </Navbar>
-    </div>
   );
 };
 

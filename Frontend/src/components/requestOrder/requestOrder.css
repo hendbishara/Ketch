@@ -152,3 +152,10 @@ input, select, textarea {
 .btn:hover {
   opacity: 0.8;
 }
+
+.error-text {
+  color: red;
+  font-size: 14px;
+  margin-top: 5px; /* Adds space between input and error message */
+  display: block; /* Forces message to appear on a new line */
+}
