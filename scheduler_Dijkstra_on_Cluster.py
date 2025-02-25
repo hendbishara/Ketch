@@ -60,61 +60,64 @@ class MultiStoreDeliveryScheduler:
         self.db_manager = DatabaseManager()
         self.setup_scheduler()
         self.stores_clusters_map = {}
+        self.connection = get_connection()
         
     def setup_scheduler(self):
         # Morning clustering job at 9 AM
         self.scheduler.add_job(
             self.process_all_stores_morning,
-            CronTrigger(hour=11, minute=42,timezone=timezone('Asia/Jerusalem'))
+            CronTrigger(hour=13, minute=8,timezone=timezone('Asia/Jerusalem'))
             
         )
         
         # Evening processing job at 9 PM
         self.scheduler.add_job(
             self.process_all_stores_evening,
-            CronTrigger(hour=11, minute=45,timezone=timezone('Asia/Jerusalem'))
+            CronTrigger(hour=13, minute=12,timezone=timezone('Asia/Jerusalem'))
         )
     
-    def check_connection(self, connection):
+    def check_connection(self):
         """Check if connection is alive, reconnect if necessary"""
-        if connection is None:
-            return get_connection()
+        if self.connection is None or not self.connection.is_connected():
+            self.connection = get_connection()
+            return self.connection
             
         try:
             # Try a simple query to check connection
-            cursor = connection.cursor()
+            cursor = self.connection.cursor()
             cursor.execute("SELECT 1")
             cursor.close()
-            return connection
+            return self.connection
         except mysql.connector.Error:
             # Connection is lost, create a new one
             try:
-                connection.close()
+                self.connection.close()
             except:
                 pass
-            return get_connection()
+            self.connection = get_connection()
+            return self.connection
     
     
-    def process_store_morning(self, store: Dict,connection):
+    def process_store_morning(self, store: Dict):
         """Process morning clustering for a single store"""
     
         print("processing morning stores")
         try:
             
             # Ensure connection is valid
-            connection = self.check_connection(connection)
-            if connection is None:
+            self.connection = self.check_connection()
+            if self.connection is None:
                 raise Exception("Could not establish database connection")
             
             store_id = store['store_id']
             print(f"Processing morning clustering for store {store_id}")
             
             # Initialize clustering with store-specific parameters
-            clustering = ClusterManager(radius,store['total_capacity'],store_id,self.db_manager,connection)
+            clustering = ClusterManager(radius,store['total_capacity'],store_id,self.db_manager,self.connection)
 
             self.stores_clusters_map[store_id] = clustering
 
-            store_coordinates = clustering.db_manager.get_store_coordinates(connection,store_id)
+            store_coordinates = clustering.db_manager.get_store_coordinates(self.connection,store_id)
             print(f"Store coordinates for store {store_id}: {store_coordinates}")
 
             if store_coordinates is None:
@@ -129,16 +132,16 @@ class MultiStoreDeliveryScheduler:
             if show_map:
                 clustering.create_map()
             # Update database with cluster assignments
+
             '''
             for cluster in clustering.clusters:
-                price = self.calculate_price(cluster,store_id,connection)
+                price = self.calculate_price(cluster,store_id,self.connection)
                 print(f"cluster coordinates: {cluster.coordinates}")
-                self.db_manager.update_cluster(connection,store_id, cluster.id, cluster.coordinates, len(cluster.orders),price)
+                self.db_manager.update_cluster(self.connection,store_id, cluster.id, cluster.coordinates, len(cluster.orders),price)
                 for req_id in cluster.orders:
-                    self.db_manager.update_cluster_id(connection,req_id,cluster.id)
-                    self.db_manager.update_final_price(connection,req_id,price)
+                    self.db_manager.update_cluster_id(self.connection,req_id,cluster.id)
+                    self.db_manager.update_final_price(self.connection,req_id,price)
             '''
-
             
             
             '''
@@ -162,7 +165,7 @@ class MultiStoreDeliveryScheduler:
             print(f"Error processing store {store_id} morning clustering: {str(e)}")
             print(traceback.format_exc()) # Print the full traceback for debugging
     
-    def process_store_evening(self, store: Dict,connection):
+    def process_store_evening(self, store: Dict):
         """Process evening routing for a single store"""
         
         for key in self.stores_clusters_map.keys():
@@ -170,7 +173,7 @@ class MultiStoreDeliveryScheduler:
         try:
             
             # Ensure connection is valid
-            connection = self.check_connection(connection)
+            connection = self.check_connection()
             if connection is None:
                 raise Exception("Could not establish database connection")
             
@@ -179,7 +182,7 @@ class MultiStoreDeliveryScheduler:
             
             #fetch clusters and add new requests to clusters
             if store_id not in self.stores_clusters_map.keys():
-                clustering = ClusterManager(radius,store['total_capacity'],store_id,self.db_manager,connection)
+                clustering = ClusterManager(radius,store['total_capacity'],store_id,self.db_manager,self.connection)
                 
             
             else:
@@ -191,14 +194,14 @@ class MultiStoreDeliveryScheduler:
                 
             clustering.fetch_clusters()
             
-            store_coordinates = self.db_manager.get_store_coordinates(connection,store_id)
+            store_coordinates = self.db_manager.get_store_coordinates(self.connection,store_id)
             print(store_coordinates)
             if store_coordinates is None:
                 raise Exception(f"Store {store_id} location not available!")
             
             #check clusters capacity and wait time and only send relevant clusters to dijkstra
             cap = store['total_capacity']
-            ready_clusters = self.check_cluster_capacity_and_time(clustering.clusters,cap,connection)
+            ready_clusters = self.check_cluster_capacity_and_time(clustering.clusters,cap,self.connection)
             
             dijk = Modified_Dijkstra(ready_clusters, cap, store_coordinates, version)
             orders = dijk.get_orders()
@@ -207,16 +210,16 @@ class MultiStoreDeliveryScheduler:
                 print(list(l))
             
             #TODO: from orders make orders from cluster id send to stores and show to users in front end
-            self.db_manager.update_combined_orders_in_db(connection,orders,clustering.clusters)
+            self.db_manager.update_combined_orders_in_db(self.connection,orders,clustering.clusters)
             #TODO: implement pricing method, update delivery price in DB and show for user in frontend
             for cluster in clustering.clusters:
-                price = self.calculate_price(cluster,store_id)
+                price = self.calculate_price(cluster,store_id,self.connection)
                 for req_id in cluster.orders:
-                    self.db_manager.update_final_price(connection,req_id,price)
+                    self.db_manager.update_final_price(self.connection,req_id,price)
 
             #reset clusters table in DB
             if reset_clusters:
-                self.db_manager.reset_clusters(connection)
+                self.db_manager.reset_clusters(self.connection)
             del self.stores_clusters_map[store_id]
             
         except Exception as e:
@@ -229,7 +232,7 @@ class MultiStoreDeliveryScheduler:
         
         try:
             #ensure connection is valid
-            connection = self.check_connection(connection)
+            self.connection = self.check_connection()
             if connection is None:
                 raise Exception("Could not establish database connection")
         except Exception as e:
@@ -262,20 +265,20 @@ class MultiStoreDeliveryScheduler:
         
         try:
             #ensure connection is valid
-            connection = self.check_connection(connection)
+            self.connection = self.check_connection()
             if connection is None:
                 raise Exception("Could not establish database connection")
         except Exception as e:
             print(e)
         
-        price_per_km = float(self.db_manager.get_price_for_store(connection,store))
+        price_per_km = float(self.db_manager.get_price_for_store(self.connection,store))
 
-        store_coordinates = self.db_manager.get_store_coordinates(connection, store)
+        store_coordinates = self.db_manager.get_store_coordinates(self.connection, store)
         print(f"DEBUG: Distance Calculation - Cluster {cluster.id} coordinates: {cluster.coordinates}, Store {store} coordinates: {store_coordinates}")
 
 
         dist = geodesic(cluster.coordinates,store_coordinates).km
-        print(f"DEBUG: Distance Calculation - Cluster {cluster.id} coordinates: {cluster.coordinates}, Store {store} coordinates: {self.db_manager.get_store_coordinates(connection, store)}")
+        print(f"DEBUG: Distance Calculation - Cluster {cluster.id} coordinates: {cluster.coordinates}, Store {store} coordinates: {self.db_manager.get_store_coordinates(self.connection, store)}")
 
         number_of_participants = len(cluster.orders)
         return (price_per_km*dist)/number_of_participants
@@ -302,44 +305,47 @@ class MultiStoreDeliveryScheduler:
         """Process morning clustering for all stores"""
         print("in Process all stores morning!")
         
-        connection = get_connection()
-        if connection is None:
+        if self.connection is None:
+            self.connection = get_connection()
+            '''
             print("Error: Could not establish database connection for morning processing")
             return
-            
+            '''
         try:
-            stores = self.db_manager.get_active_stores(connection)
+            stores = self.db_manager.get_active_stores(self.connection)
             
             for store in stores:
-                self.process_store_morning(store, connection)
+                self.process_store_morning(store)
                 # Ensure connection is still valid
-                connection = self.check_connection(connection)
+                self.connection = self.check_connection()
                 
         except Exception as e:
             print(f"Error in process_all_stores_morning: {e}")
             import traceback
             print(traceback.format_exc())
         finally:
-            try:
-                if connection:
-                    connection.close()
-            except:
-                pass
+        
+                self.connection.close()
+                self.connection = None
+        
     
     def process_all_stores_evening(self):
         """Process evening routing for all stores"""
-        connection = get_connection()
-        if connection is None:
+        
+        if self.connection is None:
+            self.connection = get_connection()
+            '''
             print("Error: Could not establish database connection for evening processing")
             return
+            '''
             
         try:
-            stores = self.db_manager.get_active_stores(connection)
+            stores = self.db_manager.get_active_stores(self.connection)
             
             for store in stores:
-                self.process_store_evening(store, connection)
+                self.process_store_evening(store)
                 # Ensure connection is still valid
-                connection = self.check_connection(connection)
+                self.connection = self.check_connection()
                 
         except Exception as e:
             print(f"Error in process_all_stores_evening: {e}")
@@ -347,8 +353,8 @@ class MultiStoreDeliveryScheduler:
             print(traceback.format_exc())
         finally:
             try:
-                if connection:
-                    connection.close()
+                if self.connection:
+                    self.connection.close()
             except:
                 pass
 
