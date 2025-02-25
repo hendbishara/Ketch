@@ -1,5 +1,7 @@
 # Ketch
-📝 Project Overview
+
+# 📝 Project Overview:
+
 This project focuses on optimizing shared delivery routes to reduce transportation costs and improve efficiency. By leveraging a modified version of Dijkstra’s algorithm, we calculate the most cost-effective and shortest delivery paths while clustering nearby orders.
 
 Traditional delivery models often result in inefficient routing and increased costs due to separate handling of individual orders. Our approach seeks to address these challenges by:
