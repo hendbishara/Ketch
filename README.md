@@ -59,10 +59,12 @@ We implement three variations of Dijkstra’s algorithm to identify the most eff
 - **Geopy** – Distance measurement for real-world coordinates.
 - **Heapq** – Efficient priority queue implementation for Dijkstra’s algorithm.
 - **React.js** – Frontend for route visualization.
-- **Flask / FastAPI** – Backend API services for processing delivery data.
+- **Flask** – Backend API services for processing delivery data.
 - **MySQL** – Relational database used for storing order and cluster data.
 - **Railway Cloud** – Cloud-based MySQL database hosting, providing secure and scalable data storage.
-
+- **React.js** – Frontend framework for route visualization.  
+- **Vite.js** – Fast build tool for frontend development.  
+- **CSS** – Styling for frontend components.  
 ---
 
 ## 🗄️ Database Connection Guide  
@@ -81,20 +83,27 @@ This project uses a **Railway Cloud MySQL database** for data storage. Follow th
 4. Click **"Test Connection"**.
 5. If the test is successful, click **OK**.
 
-# connect to the database using mysql:
-Open MySQL Workbench.
-Click "New Connection".
-Enter the following details:
-Connection Name: Railway MySQL
-Hostname: turntable.proxy.rlwy.net
-Port: 21931
-Username: root
-Password: QidNZDIznmxgXewmxVnbzMVkFVZoyHZs
-Default Schema (Optional): railway
-Click "Test Connection".
-If the test is successful, click OK.
-mysql -u root -p -h turntable.proxy.rlwy.net -P 21931 railway
-# To add:
-1. add a function that after we build clusters checks if there is a cluster with capacity < max_capacity and send a notification for all users in the cliuster's radius. add a list of items the user can choose from. find how to prevent two users or more to fill the cluster. 
+
+## 📊 Algorithm Analyzer & Dijkstra Heuristics  
+
+The **Algorithm Analyzer** evaluates the performance of the **Modified Dijkstra Algorithm** under different conditions. It tests multiple algorithm versions (`Base`, `V1`, `V2`, `V3`) by simulating random clusters with varying sizes and capacities. The module records key performance metrics such as:  
+- **Path loss** (average & total).  
+- **Node loss** for efficiency assessment.  
+- **Number of orders processed**.  
+- **Algorithm runtime performance**.  
+
+### 📂 Results & Reports  
+The results are saved in:  
+- 📊 **Excel (`algorithm_analysis_results.xlsx`)** – Contains detailed data for further analysis.  
+- 📄 **PDF Reports**:  
+  - **`algorithm_analysis.pdf`** – General performance analysis.  
+  - **`algorithm_analysis_50.pdf`** – Analysis for 50 clusters.  
+  - **`dijkstra_huristics.pdf`** – Evaluates different Dijkstra versions.  
+  - **`algorithm_analysis.xlsx`** – Includes real-world analysis of **100 orders**.  
+
+### 🏃 Running the Heuristics Analysis  
+If you want to see how the **different Dijkstra versions** work with real examples, run:  
+```sh
+python dijkstra_huristics.py
 
 
