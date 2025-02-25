@@ -67,23 +67,6 @@ We implement three variations of Dijkstra’s algorithm to identify the most eff
 - **CSS** – Styling for frontend components.  
 ---
 
-## 🗄️ Database Connection Guide  
-This project uses a **Railway Cloud MySQL database** for data storage. Follow these steps to connect:
-
-### Connect Using MySQL Workbench**
-1. Open **MySQL Workbench**.
-2. Click **"New Connection"**.
-3. Enter the following details:  
-   - **Connection Name**: `Railway MySQL`  
-   - **Hostname**: `turntable.proxy.rlwy.net`  
-   - **Port**: `21931`  
-   - **Username**: `root`  
-   - **Password**: `QidNZDIznmxgXewmxVnbzMVkFVZoyHZs`  
-   - **Default Schema (Optional)**: `railway`  
-4. Click **"Test Connection"**.
-5. If the test is successful, click **OK**.
-
-
 ## 📊 Algorithm Analyzer & Dijkstra Heuristics  
 
 The **Algorithm Analyzer** evaluates the performance of the **Modified Dijkstra Algorithm** under different conditions. It tests multiple algorithm versions (`Base`, `V1`, `V2`, `V3`) by simulating random clusters with varying sizes and capacities. The module records key performance metrics such as:  
@@ -105,5 +88,34 @@ The results are saved in:
 If you want to see how the **different Dijkstra versions** work with real examples, run:  
 ```sh
 python dijkstra_huristics.py
+
+## 🗄️ Database Schema Overview  
+
+The database is hosted on **Railway Cloud** using **MySQL**, ensuring **scalability and secure data management** for shared delivery optimization. It enables tracking of **active requests, clustered deliveries, and store inventory**, ensuring an optimized routing and cost-sharing model.  
+
+### 📌 **Key Database Tables**  
+
+- **`users`** – Stores user details, including name, email, location, and coordinates.  
+- **`stores`** – Contains store information such as name, total capacity, and delivery fees.  
+- **`items`** – Represents products available in stores, with capacity and pricing details.  
+- **`active_requests`** – Tracks ongoing delivery requests, linking users, stores, and clusters.  
+- **`request_items`** – Stores the items associated with each request.  
+- **`combined_orders`** – Groups multiple requests into a **shared delivery order**.  
+- **`clusters`** – Manages grouped orders based on **location, estimated pricing, and partner count**.  
+
+### 🔗 **Database Hosting & Connection**  
+The database is hosted on **Railway Cloud** with **MySQL**, allowing **remote access and efficient data handling**.  
+
+To connect to the database using MySQL Workbench:  
+1. Open **MySQL Workbench**.  
+2. Click **"New Connection"**.  
+3. Enter the following details:  
+   - **Hostname**: `turntable.proxy.rlwy.net`  
+   - **Port**: `21931`  
+   - **Username**: `root`  
+   - **Password**: `QidNZDIznmxgXewmxVnbzMVkFVZoyHZs`  
+   - **Default Schema (Optional)**: `railway`  
+4. Click **"Test Connection"** → **OK** if successful.  
+
 
 
