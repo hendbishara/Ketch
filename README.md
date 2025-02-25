@@ -39,8 +39,11 @@ We implement **three variations** of Dijkstra’s algorithm to identify the most
 
 | Algorithm Version | Description |
 |-------------------|------------|
-| **Version 1 (V1)** | Modified Dijkstra version 1, where the loss function is **path distance / path capacity**. To ensure distinct paths, we filter the paths when combining the orders. Returns a set of combined orders. |
-| **Version 2 (V2)** | This version keeps track of nodes assigned as parents and prevents **two nodes from having the same parent**, unless it is the warehouse. Returns a set of combined orders. |
+| **Version 1 (V1)** | modified dijkstra version 1, we run the modified dijkstra where the loss function is 
+        path distance/ path capacity, to ensure distinct paths we filter the paths when combining the orders.
+        returns a set of the combined orders |
+| **Version 2 (V2)** | modified version of dijkstra that keeps track of nodes that where assigned aas parents, and does not allow 2 nodes to have the same parent unless its the warehouse
+        returns a set of the combined orders |
 | **Version 3 (V3)** | This version assigns each node a parent by selecting the neighbor with the **minimal loss** among all available paths, ensuring distinct paths. Returns a set of combined orders. |
 
 
