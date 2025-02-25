@@ -1,0 +1,15 @@
+.order-container {
+    display: flex;
+    flex-wrap: wrap; /* Allows cards to wrap onto a new line */
+    justify-content: center;
+    gap: 16px; /* Spacing between cards */
+    padding: 20px;
+  }
+  
+  .order-card {
+    width: 300px;
+    min-height: 200px;
+    flex: 1 1 auto; /* Flexible layout to allow proper wrapping */
+    max-width: 300px;
+  }
+  
