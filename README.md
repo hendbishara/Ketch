@@ -66,29 +66,6 @@ We implement three variations of Dijkstra’s algorithm to identify the most eff
 - **Vite.js** – Fast build tool for frontend development.  
 - **CSS** – Styling for frontend components.  
 ---
-
-## 📊 Algorithm Analyzer & Dijkstra Heuristics  
-
-The **Algorithm Analyzer** evaluates the performance of the **Modified Dijkstra Algorithm** under different conditions. It tests multiple algorithm versions (`Base`, `V1`, `V2`, `V3`) by simulating random clusters with varying sizes and capacities. The module records key performance metrics such as:  
-- **Path loss** (average & total).  
-- **Node loss** for efficiency assessment.  
-- **Number of orders processed**.  
-- **Algorithm runtime performance**.  
-
-### 📂 Results & Reports  
-The results are saved in:  
-- 📊 **Excel (`algorithm_analysis_results.xlsx`)** – Contains detailed data for further analysis.  
-- 📄 **PDF Reports**:  
-  - **`algorithm_analysis.pdf`** – General performance analysis.  
-  - **`algorithm_analysis_50.pdf`** – Analysis for 50 clusters.  
-  - **`dijkstra_huristics.pdf`** – Evaluates different Dijkstra versions.  
-  - **`algorithm_analysis.xlsx`** – Includes real-world analysis of **100 orders**.  
-
-### 🏃 Running the Heuristics Analysis  
-If you want to see how the **different Dijkstra versions** work with real examples, run:  
-```sh
-python dijkstra_huristics.py
-
 ## 🗄️ Database Schema Overview  
 
 The database is hosted on **Railway Cloud** using **MySQL**, ensuring **scalability and secure data management** for shared delivery optimization. It enables tracking of **active requests, clustered deliveries, and store inventory**, ensuring an optimized routing and cost-sharing model.  
@@ -116,6 +93,30 @@ To connect to the database using MySQL Workbench:
    - **Password**: `QidNZDIznmxgXewmxVnbzMVkFVZoyHZs`  
    - **Default Schema (Optional)**: `railway`  
 4. Click **"Test Connection"** → **OK** if successful.  
+
+
+## 📊 Algorithm Analyzer & Dijkstra Heuristics  
+
+The **Algorithm Analyzer** evaluates the performance of the **Modified Dijkstra Algorithm** under different conditions. It tests multiple algorithm versions (`Base`, `V1`, `V2`, `V3`) by simulating random clusters with varying sizes and capacities. The module records key performance metrics such as:  
+- **Path loss** (average & total).  
+- **Node loss** for efficiency assessment.  
+- **Number of orders processed**.  
+- **Algorithm runtime performance**.  
+
+### 📂 Results & Reports  
+The results are saved in:  
+- 📊 **Excel (`algorithm_analysis_results.xlsx`)** – Contains detailed data for further analysis.  
+- 📄 **PDF Reports**:  
+  - **`algorithm_analysis.pdf`** – General performance analysis.  
+  - **`algorithm_analysis_50.pdf`** – Analysis for 50 clusters.  
+  - **`dijkstra_huristics.pdf`** – Evaluates different Dijkstra versions.  
+  - **`algorithm_analysis.xlsx`** – Includes real-world analysis of **100 orders**.  
+
+### 🏃 Running the Heuristics Analysis  
+If you want to see how the **different Dijkstra versions** work with real examples, run:  
+```sh
+python dijkstra_huristics.py
+
 
 
 
