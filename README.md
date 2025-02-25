@@ -83,10 +83,7 @@ This project uses a **Railway Cloud MySQL database** for data storage. Follow th
 4. Click **"Test Connection"**.
 5. If the test is successful, click **OK**.
 
-## 📊 Heuristics and Algorithm Analysis  
 
-### **Heuristics Implementation**  
-The repository contains a heuristics module responsible for analyzing and evaluating the performance of the **Modified Dijkstra Algorithm** under different conditions.  
 ## 📊 Algorithm Analyzer & Dijkstra Heuristics  
 
 The **Algorithm Analyzer** evaluates the performance of the **Modified Dijkstra Algorithm** under different conditions. It tests multiple algorithm versions (`Base`, `V1`, `V2`, `V3`) by simulating random clusters with varying sizes and capacities. The module records key performance metrics such as:  
