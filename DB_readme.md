@@ -153,4 +153,4 @@ Active_Requests ───(M:1)─── Combined_Orders
 - Requests can be grouped into **combined orders** (`combined_orders`).
 - A **delivery price** is calculated for each request.
 
-
+for more details see readme
