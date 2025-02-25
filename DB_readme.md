@@ -153,5 +153,4 @@ Active_Requests ───(M:1)─── Combined_Orders
 - Requests can be grouped into **combined orders** (`combined_orders`).
 - A **delivery price** is calculated for each request.
 
-This updated schema ensures better scalability and organization for managing user requests and store inventories. 🚀
 
