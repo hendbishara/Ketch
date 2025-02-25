@@ -22,6 +22,7 @@ Our model addresses these inefficiencies by:
 ✅ **Applying a modified version of Dijkstra’s algorithm** to ensure optimal route selection.
 
 By integrating these components, we aim to enhance the efficiency of last-mile delivery operations and significantly reduce logistics costs.
+
 ---
 
 ## 📊 Methodology
