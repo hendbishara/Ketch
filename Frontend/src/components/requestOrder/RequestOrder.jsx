@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Redirect users to login if not logged in
 import "./requestOrder.css";
 
 const storeMapping = {
@@ -15,6 +16,7 @@ const RequestOrder = () => {
   const [timeToWait, setTimeToWait] = useState("");
   const [notes, setNotes] = useState("");
   const [errorItems, setErrorItems] = useState([]);
+  const navigate = useNavigate(); // For redirecting
 
   // Retrieve user ID from local storage
   useEffect(() => {
@@ -43,13 +45,15 @@ const RequestOrder = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!store) {
-      alert("Please select a store.");
+    // 🚨 Prevent order submission if the user is not logged in
+    if (!userId) {
+      alert("You must be signed in to submit a request.");
+      navigate("/login"); // Redirect to login page
       return;
     }
 
-    if (!userId) {
-      alert("User not logged in. Please login first.");
+    if (!store) {
+      alert("Please select a store.");
       return;
     }
 
@@ -99,6 +103,14 @@ const RequestOrder = () => {
   return (
     <div className="request-order-container">
       <h2 className="request-title">Request an Order</h2>
+      
+      {/* 🚨 Show warning if user is not logged in */}
+      {!userId && (
+        <div className="alert alert-warning">
+          ⚠️ You must be signed in to request an order. <button onClick={() => navigate("/login")} className="btn btn-link">Login here</button>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         
         {/* Store Selection */}
@@ -167,8 +179,10 @@ const RequestOrder = () => {
           <textarea name="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
         </div>
 
-        {/* Submit Button */}
-        <button type="submit" className="btn btn-primary">Submit Request</button>
+        {/* Submit Button - Disabled if user is not logged in */}
+        <button type="submit" className="btn btn-primary" disabled={!userId}>
+          Submit Request
+        </button>
       </form>
     </div>
   );
