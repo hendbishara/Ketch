@@ -6,9 +6,9 @@ This project focuses on optimizing shared delivery routes to reduce transportati
 
 Traditional delivery models often result in inefficient routing and increased costs due to separate handling of individual orders. Our approach seeks to address these challenges by:
 
-Minimizing overall delivery costs through shared transportation.
-Optimizing delivery paths by considering order proximity and shortest distances.
-Ensuring efficient capacity utilization to reduce the number of trips required.
+#Minimizing overall delivery costs through shared transportation.
+#Optimizing delivery paths by considering order proximity and shortest distances.
+#Ensuring efficient capacity utilization to reduce the number of trips required.
 This solution is particularly relevant for logistics, e-commerce, and supply chain management, where route efficiency directly impacts operational costs.
 
 # connect to the database using mysql:
