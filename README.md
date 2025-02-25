@@ -22,18 +22,6 @@ Our model addresses these inefficiencies by:
 ✅ **Applying a modified version of Dijkstra’s algorithm** to ensure optimal route selection.
 
 By integrating these components, we aim to enhance the efficiency of last-mile delivery operations and significantly reduce logistics costs.
-
----
-
-## 🛠️ Technologies Used
-- **Python** – Core programming language for algorithm development.
-- **NetworkX** – Graph-based routing and path optimization.
-- **Geopy** – Distance measurement for real-world coordinates.
-- **Heapq** – Efficient priority queue implementation for Dijkstra’s algorithm.
-- **React.js** – Frontend for route visualization.
-- **Flask / FastAPI** – Backend API services for processing delivery data.
-- **MySQL / PostgreSQL** – Database management for storing orders and clustering data.
-
 ---
 
 ## 📊 Methodology
@@ -64,7 +52,33 @@ We implement **three variations** of Dijkstra’s algorithm to identify the most
 
 ---
 
+## 🛠️ Technologies Used
+- **Python** – Core programming language for algorithm development.
+- **NetworkX** – Graph-based routing and path optimization.
+- **Geopy** – Distance measurement for real-world coordinates.
+- **Heapq** – Efficient priority queue implementation for Dijkstra’s algorithm.
+- **React.js** – Frontend for route visualization.
+- **Flask / FastAPI** – Backend API services for processing delivery data.
+- **MySQL** – Relational database used for storing order and cluster data.
+- **Railway Cloud** – Cloud-based MySQL database hosting, providing secure and scalable data storage.
 
+---
+
+## 🗄️ Database Connection Guide  
+This project uses a **Railway Cloud MySQL database** for data storage. Follow these steps to connect:
+
+### **Option 1: Connect Using MySQL Workbench**
+1. Open **MySQL Workbench**.
+2. Click **"New Connection"**.
+3. Enter the following details:  
+   - **Connection Name**: `Railway MySQL`  
+   - **Hostname**: `turntable.proxy.rlwy.net`  
+   - **Port**: `21931`  
+   - **Username**: `root`  
+   - **Password**: `QidNZDIznmxgXewmxVnbzMVkFVZoyHZs`  
+   - **Default Schema (Optional)**: `railway`  
+4. Click **"Test Connection"**.
+5. If the test is successful, click **OK**.
 
 # connect to the database using mysql:
 Open MySQL Workbench.
