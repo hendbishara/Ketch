@@ -59,10 +59,12 @@ We implement three variations of Dijkstra’s algorithm to identify the most eff
 - **Geopy** – Distance measurement for real-world coordinates.
 - **Heapq** – Efficient priority queue implementation for Dijkstra’s algorithm.
 - **React.js** – Frontend for route visualization.
-- **Flask / FastAPI** – Backend API services for processing delivery data.
+- **Flask** – Backend API services for processing delivery data.
 - **MySQL** – Relational database used for storing order and cluster data.
 - **Railway Cloud** – Cloud-based MySQL database hosting, providing secure and scalable data storage.
-
+- **React.js** – Frontend framework for route visualization.  
+- **Vite.js** – Fast build tool for frontend development.  
+- **CSS** – Styling for frontend components.  
 ---
 
 ## 🗄️ Database Connection Guide  
@@ -81,19 +83,30 @@ This project uses a **Railway Cloud MySQL database** for data storage. Follow th
 4. Click **"Test Connection"**.
 5. If the test is successful, click **OK**.
 
-# connect to the database using mysql:
-Open MySQL Workbench.
-Click "New Connection".
-Enter the following details:
-Connection Name: Railway MySQL
-Hostname: turntable.proxy.rlwy.net
-Port: 21931
-Username: root
-Password: QidNZDIznmxgXewmxVnbzMVkFVZoyHZs
-Default Schema (Optional): railway
-Click "Test Connection".
-If the test is successful, click OK.
-mysql -u root -p -h turntable.proxy.rlwy.net -P 21931 railway
+## 📊 Heuristics and Algorithm Analysis  
+
+### **Heuristics Implementation**  
+The repository contains a heuristics module responsible for analyzing and evaluating the performance of the **Modified Dijkstra Algorithm** under different conditions.  
+
+### **Key Features of the Heuristics Analysis:**  
+- Implements **multiple algorithm versions** (`Base`, `V1`, `V2`, `V3`) to compare efficiency.  
+- Uses **pandas** and **NumPy** for data processing and statistical evaluation.  
+- Simulates **random clusters** with varying sizes and capacities to test scalability.  
+- Generates **summary tables** and **statistical comparisons** for:
+  - **Number of orders** processed.  
+  - **Path loss metrics** (average and total loss per route).  
+  - **Node loss metrics** for assessing efficiency.  
+  - **Algorithm runtime performance**.  
+- Saves results in **Excel format (`algorithm_analysis_results.xlsx`)** for further analysis.  
+- Produces comparative **visualizations using Matplotlib and Seaborn**, with results exported as PDF reports.  
+
+### **Pre-Generated Algorithm Performance Reports**  
+The repository includes pre-generated analysis reports containing actual test results:  
+- 📄 **`algorithm_analysis.pdf`** – General performance report.  
+- 📄 **`algorithm_analysis_50.pdf`** – Analysis for **50 clusters**.  
+- 📊 **`algorithm_analysis.xlsx`** – Excel sheet with **actual numbers and performance metrics** of the algorithm.  
+
+
 # To add:
 1. add a function that after we build clusters checks if there is a cluster with capacity < max_capacity and send a notification for all users in the cliuster's radius. add a list of items the user can choose from. find how to prevent two users or more to fill the cluster. 
 
