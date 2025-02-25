@@ -49,7 +49,7 @@ class Modified_Dijkstra:
         for c in self.clusters:
             if(c.total_capacity >= self.max_c):
                 # If cluster exceeds max capacity(full), treat it as an immediate order
-                self.orders.append(("Warhouse",c))
+                self.orders.append(("WareHouse",c.id))
                 self.total_orders_capacity.append(c.total_capacity)
                 dist = distance(self.warehouse_coords,c.coordinates).km
                 self.total_orders_dist.append(dist)
@@ -92,7 +92,7 @@ class Modified_Dijkstra:
             for v_id in self.g.neighbors(u_id):
                 #prevent cycles:
                 if v_id in visited:
-                    continue  # Prevent cycles
+                    continue  
                 v = self.g.nodes[v_id]  # Access the neighboring node data
                 # Relaxation condition
                 new_path_C = u['path_C'] + v['capacity']
@@ -295,39 +295,6 @@ class Modified_Dijkstra:
             self.total_orders_dist.append(total_dist)
             self.total_orders_loss.append(total_loss)
             
-
-    
-    """
-    def combine_orders_V1(self,bfs_graph):
-        
-        
-        # go over all nodes, check if out degree > 1 
-        for node in bfs_graph.nodes():
-            if bfs_graph.out_degree(node)>1:
-                #go over each neighbor, check loss from warehouse and keep the edge with max loss from warehouse
-                max_loss = 0
-                max_node = None
-                for neighbor in  bfs_graph.successors(node):
-                    dist = self.g["WareHouse"][neighbor]['weight']
-                    capacity = self.g.nodes[neighbor]['capacity']
-                    curr_loss = dist / capacity
-                    if max_loss == 0:
-                        max_loss = curr_loss
-                        max_node = neighbor
-                    if curr_loss<max_loss:
-                        bfs_graph.remove_edge(node,neighbor)
-                        bfs_graph.add_edge("WareHouse",neighbor)
-                    elif max_node!=None:
-                        bfs_graph.remove_edge(node,max_node)
-                        bfs_graph.add_edge("WareHouse",max_node)
-                        max_loss = curr_loss
-                        max_node = neighbor
-        
-        
-        #we get a tree where no node that is not the warehouse hase an out degree > 1
-        #call on the combined_orders function
-        self.combined_orders(bfs_graph)
-    """
     
     def combine_orders_V1(self, bfs_graph):
         """Combine orders from the modified Dijkstra version 1 where one node can be a parent to more 
