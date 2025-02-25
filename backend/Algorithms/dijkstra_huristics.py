@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 import time
@@ -12,12 +13,23 @@ class Cluster:
     def __init__(self, cluster_id, coordinates, capacity):
         self.id = cluster_id
         self.coordinates = coordinates
-        self.capacity = capacity
+        self.total_capacity = capacity
 
 class AlgorithmAnalyzer:
+    """
+    A class to analyze and compare the performance of different versions 
+    of the Modified Dijkstra algorithm.
+    """
     def __init__(self, warehouse_coords: Tuple[float, float]):
+        """
+        Initialize the algorithm analyzer with warehouse coordinates.
+
+        Parameters:
+        warehouse_coords (Tuple[float, float]): Coordinates of the central warehouse.
+        """
         self.versions = ["Base", "V1", "V2", "V3"]
         self.warehouse_coords = warehouse_coords
+        # Dictionary to store experiment results
         self.results = {
             'version': [],
             'num_clusters': [],
@@ -29,12 +41,23 @@ class AlgorithmAnalyzer:
             'avg_node_loss': [],
             'runtime': []
         }
+
     
     def run_single_experiment(self, 
                             clusters: List, 
                             max_capacity: int, 
                             version: str) -> Dict:
-        """Run a single experiment for a given version and configuration"""
+        """
+        Run a single experiment for a specific algorithm version.
+
+        Parameters:
+        clusters (List[Cluster]): List of cluster objects.
+        max_capacity (int): Maximum capacity per cluster.
+        version (str): Algorithm version to test.
+
+        Returns:
+        Dict: A dictionary containing various performance metrics.
+        """
         start_time = time.time()
         
         # Initialize algorithm
@@ -58,7 +81,14 @@ class AlgorithmAnalyzer:
                        cluster_sizes: List[int],
                        max_capacities: List[int],
                        num_runs: int = 20):
-        """Run experiments across all configurations"""
+        """
+        Run experiments for different configurations of clusters and capacities.
+
+        Parameters:
+        cluster_sizes (List[int]): List of different numbers of clusters to test.
+        max_capacities (List[int]): List of different maximum capacities to test.
+        num_runs (int): Number of repetitions for each configuration.
+        """
         for n_clusters in cluster_sizes:
             for max_capacity in max_capacities:
                 for run in range(num_runs):
@@ -83,8 +113,13 @@ class AlgorithmAnalyzer:
     
     def generate_random_clusters(self, n_clusters: int) -> List:
         """
-        Generate random clusters for testing
-        Implement this based on your cluster structure
+        Generate a list of randomly positioned cluster objects.
+
+        Parameters:
+        n_clusters (int): Number of clusters to generate.
+
+        Returns:
+        List[Cluster]: A list of randomly generated cluster objects.
         """
         # This is a placeholder - implement based on your cluster class structure
         clusters = []
@@ -99,7 +134,7 @@ class AlgorithmAnalyzer:
         return clusters
     
     def get_results_df(self) -> pd.DataFrame:
-        """Convert results to DataFrame"""
+        """Convert stored results into a Pandas DataFrame containing experiment results."""
         return pd.DataFrame(self.results)
     
     def plot_comparative_analysis(self,save_pdf: bool = False, pdf_filename: str = 'analysis_plots.pdf'):
@@ -110,8 +145,7 @@ class AlgorithmAnalyzer:
         save_pdf (bool): Whether to save the plots to PDF
         pdf_filename (str): Name of the PDF file to save
         
-        Returns:
-        matplotlib.figure.Figure: The generated figure
+        Returns The generated figure
         """
         df = self.get_results_df()
         
