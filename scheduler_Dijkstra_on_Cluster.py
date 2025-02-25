@@ -40,15 +40,19 @@ reset_clusters = False
 
 
 def get_connection():
-    return mysql.connector.connect(
-        host="turntable.proxy.rlwy.net",
-        user="root", 
-        password="QidNZDIznmxgXewmxVnbzMVkFVZoyHZs",  
-        database="railway",
-        port=21931,
-        connection_timeout=30,
-        autocommit=True  # Ensure auto-reconnect
-    )
+    try:
+        return mysql.connector.connect(
+            host="turntable.proxy.rlwy.net",
+            user="root", 
+            password="QidNZDIznmxgXewmxVnbzMVkFVZoyHZs",  
+            database="railway",
+            port=21931,
+            connection_timeout=30,
+            autocommit=True
+        )
+    except Exception as e:
+        print(f"Error creating database connection: {e}")
+        return None
 
 class MultiStoreDeliveryScheduler:
     def __init__(self):
@@ -61,16 +65,34 @@ class MultiStoreDeliveryScheduler:
         # Morning clustering job at 9 AM
         self.scheduler.add_job(
             self.process_all_stores_morning,
-            CronTrigger(hour=22, minute=17,timezone=timezone('Asia/Jerusalem'))
+            CronTrigger(hour=11, minute=42,timezone=timezone('Asia/Jerusalem'))
             
         )
         
         # Evening processing job at 9 PM
         self.scheduler.add_job(
             self.process_all_stores_evening,
-            CronTrigger(hour=22, minute=22,timezone=timezone('Asia/Jerusalem'))
+            CronTrigger(hour=11, minute=45,timezone=timezone('Asia/Jerusalem'))
         )
     
+    def check_connection(self, connection):
+        """Check if connection is alive, reconnect if necessary"""
+        if connection is None:
+            return get_connection()
+            
+        try:
+            # Try a simple query to check connection
+            cursor = connection.cursor()
+            cursor.execute("SELECT 1")
+            cursor.close()
+            return connection
+        except mysql.connector.Error:
+            # Connection is lost, create a new one
+            try:
+                connection.close()
+            except:
+                pass
+            return get_connection()
     
     
     def process_store_morning(self, store: Dict,connection):
@@ -78,6 +100,12 @@ class MultiStoreDeliveryScheduler:
     
         print("processing morning stores")
         try:
+            
+            # Ensure connection is valid
+            connection = self.check_connection(connection)
+            if connection is None:
+                raise Exception("Could not establish database connection")
+            
             store_id = store['store_id']
             print(f"Processing morning clustering for store {store_id}")
             
@@ -140,6 +168,12 @@ class MultiStoreDeliveryScheduler:
         for key in self.stores_clusters_map.keys():
             print(key)
         try:
+            
+            # Ensure connection is valid
+            connection = self.check_connection(connection)
+            if connection is None:
+                raise Exception("Could not establish database connection")
+            
             store_id = store['store_id']
             print(f"Processing evening routing for store {store_id}")
             
@@ -192,6 +226,15 @@ class MultiStoreDeliveryScheduler:
     def check_cluster_capacity_and_time(self,clusters, max_capacity,connection):
         time_has_run_out = False
         send_clusters = []
+        
+        try:
+            #ensure connection is valid
+            connection = self.check_connection(connection)
+            if connection is None:
+                raise Exception("Could not establish database connection")
+        except Exception as e:
+            print(e)
+        
         for cluster in clusters:
             print("im here!")
             print(cluster.total_capacity)
@@ -216,6 +259,15 @@ class MultiStoreDeliveryScheduler:
         return send_clusters
                          
     def calculate_price(self,cluster,store,connection):
+        
+        try:
+            #ensure connection is valid
+            connection = self.check_connection(connection)
+            if connection is None:
+                raise Exception("Could not establish database connection")
+        except Exception as e:
+            print(e)
+        
         price_per_km = float(self.db_manager.get_price_for_store(connection,store))
 
         store_coordinates = self.db_manager.get_store_coordinates(connection, store)
@@ -245,28 +297,60 @@ class MultiStoreDeliveryScheduler:
         return new_date.date() > today                  
     
     
+
     def process_all_stores_morning(self):
-        connection = get_connection()
-        """Process morning clustering for all stores in parallel"""
+        """Process morning clustering for all stores"""
         print("in Process all stores morning!")
-        stores = self.db_manager.get_active_stores(connection)
         
-        for store in stores:
-            self.process_store_morning(store,connection)
-            #sleep(1)  # Ensure at least 1 second between requests
-        
-        #with ThreadPoolExecutor(max_workers=min(len(stores), 10)) as executor:
-        #    executor.map(self.process_store_morning, stores)
-        connection.close()
+        connection = get_connection()
+        if connection is None:
+            print("Error: Could not establish database connection for morning processing")
+            return
+            
+        try:
+            stores = self.db_manager.get_active_stores(connection)
+            
+            for store in stores:
+                self.process_store_morning(store, connection)
+                # Ensure connection is still valid
+                connection = self.check_connection(connection)
+                
+        except Exception as e:
+            print(f"Error in process_all_stores_morning: {e}")
+            import traceback
+            print(traceback.format_exc())
+        finally:
+            try:
+                if connection:
+                    connection.close()
+            except:
+                pass
     
     def process_all_stores_evening(self):
-        """Process evening routing for all stores in parallel"""
+        """Process evening routing for all stores"""
         connection = get_connection()
-        stores = self.db_manager.get_active_stores(connection)
-        for store in stores:
-            self.process_store_evening(store,connection)
-            #sleep(1)  # Ensure at least 1 second between requests
-        connection.close()
+        if connection is None:
+            print("Error: Could not establish database connection for evening processing")
+            return
+            
+        try:
+            stores = self.db_manager.get_active_stores(connection)
+            
+            for store in stores:
+                self.process_store_evening(store, connection)
+                # Ensure connection is still valid
+                connection = self.check_connection(connection)
+                
+        except Exception as e:
+            print(f"Error in process_all_stores_evening: {e}")
+            import traceback
+            print(traceback.format_exc())
+        finally:
+            try:
+                if connection:
+                    connection.close()
+            except:
+                pass
 
     
     def start(self):
