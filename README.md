@@ -71,7 +71,7 @@ We implement **three variations** of Dijkstra’s algorithm to identify the most
 ## 🗄️ Database Connection Guide  
 This project uses a **Railway Cloud MySQL database** for data storage. Follow these steps to connect:
 
-### **Option 1: Connect Using MySQL Workbench**
+### Connect Using MySQL Workbench**
 1. Open **MySQL Workbench**.
 2. Click **"New Connection"**.
 3. Enter the following details:  
