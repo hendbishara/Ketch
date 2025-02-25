@@ -13,11 +13,6 @@ This solution is particularly relevant for **logistics, e-commerce, and supply c
 
 ---
 
-## 💡 Problem Statement & Objectives
-### Challenges in Traditional Delivery Models
-- Orders are often delivered **individually**, leading to **high fuel consumption** and increased delivery costs.
-- Delivery paths are **not optimized** for multiple orders, resulting in longer travel distances.
-- Delivery capacity is **underutilized**, requiring additional trips.
 
 ### Proposed Solution
 Our model addresses these inefficiencies by:
