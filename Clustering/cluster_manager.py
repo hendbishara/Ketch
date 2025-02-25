@@ -28,7 +28,7 @@ class Cluster:
 class ClusterManager:
 
     
-    def __init__(self, radius_km, max_capacity,store_id, db_manager: DatabaseManager,connection):
+    def __init__(self, radius_km, max_capacity,store_id, db_manager: DatabaseManager):
         self.radius_km = radius_km
         #self.max_capacity = 1000
         self.max_capacity = max_capacity  # Maximum capacity constraint
@@ -36,11 +36,10 @@ class ClusterManager:
         self.store_id = store_id
         self.global_cluster_id = 1  # Global counter for cluster IDs
         self.db_manager = db_manager
-        self.connection = connection
 
     def build_clusters(self):
         """ Builds clusters from scratch based on existing orders """
-        orders = self.db_manager.get_all_orders(self.connection,self.store_id)  or [] # Fetch all orders
+        orders = self.db_manager.get_all_orders(self.store_id)  or [] # Fetch all orders
     
         self.clusters = []  # Reset clusters
         self.global_cluster_id = 1  # Reset global cluster ID
@@ -50,13 +49,13 @@ class ClusterManager:
             user_id = order['user_id']  # Extract order ID and user ID
             print(f"Processing order {req_id} for user {user_id}")
             # Fetch user coordinates (latitude, longitude)
-            user_coordinates = self.db_manager.get_user_coordinates(self.connection,user_id)
+            user_coordinates = self.db_manager.get_user_coordinates(user_id)
             if not user_coordinates:
                 continue  # Skip if user has no coordinates
             
             latitude, longitude = user_coordinates  # Extract coordinates
             order_coord = (latitude, longitude)  # Order coordinates
-            order_capacity = self.db_manager.get_order_capacity(self.connection,req_id)  # Get order capacity
+            order_capacity = self.db_manager.get_order_capacity(req_id)  # Get order capacity
 
             self.add_order_to_cluster(req_id, order_coord, order_capacity)  # Add order
 
@@ -90,14 +89,14 @@ class ClusterManager:
     def fetch_clusters(self):
         """fetch new requests and add them to already available clusters or create a new cluster for them"""
         print("curr cluster counter: " + str(self.global_cluster_id))
-        requests = self.db_manager.get_requests(self.connection,self.store_id)
+        requests = self.db_manager.get_requests(self.store_id)
         for req in requests:
             req_id = req['req_id']
             clus_id = req['cluster_id']
-            cap = self.db_manager.get_order_capacity(self.connection,req_id)
+            cap = self.db_manager.get_order_capacity(req_id)
             if clus_id == -1:
-                order_coord = self.db_manager.get_user_coordinates(self.connection,req['user_id'])
-                cap = self.db_manager.get_order_capacity(self.connection,req['req_id'])
+                order_coord = self.db_manager.get_user_coordinates(req['user_id'])
+                cap = self.db_manager.get_order_capacity(req['req_id'])
                 self.add_order_to_cluster(req['req_id'], order_coord, cap)
 
             
@@ -130,12 +129,12 @@ class ClusterManager:
             # ✅ Add green markers for orders and draw lines to the centroid
             for order_id in cluster.orders:
                 # Fetch user ID from the order
-                user_id = self.db_manager.get_user_id_from_order(self.connection,order_id)
+                user_id = self.db_manager.get_user_id_from_order(order_id)
                 if not user_id:
                     continue
 
                 # Fetch user coordinates
-                user_coord = self.db_manager.get_user_coordinates(self.connection,user_id)
+                user_coord = self.db_manager.get_user_coordinates(user_id)
                 if not user_coord:
                     continue
 
