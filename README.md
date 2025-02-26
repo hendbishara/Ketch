@@ -166,7 +166,7 @@ The scheduler ensures efficient order grouping and optimized delivery routes, re
    ```sh
    pip install -r requirements.txt
    ```
-7. run app.py
+7. run app.py on a different terminal in parallel:
    ```sh
    pyhton app.py
    ```
