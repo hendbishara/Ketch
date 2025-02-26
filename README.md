@@ -142,6 +142,7 @@ The scheduler ensures efficient order grouping and optimized delivery routes, re
 3. **show_map:** this is a boolean value, you can set it to be true if you want the clusters to appear on a map.
 4. **reset_clusters:** this is a boolean value, if set to true it resets the clusetrs table in the database before running the morning scheduler.
 5. **reset_status:** this is a boolean value, if set to true it resets the status column in the active_requests table in the database, for testing purposes (status=0:order is still in process, status=1 order is processed and sent to store)
+6. **time_stamp_test:** this is a boolean value, if set true it will reset the time stamp of all orders in the data base to the current day for testing purposes. (otherwise orders made preiously with maximal waiting time that already expired will not be processed).
 
 
 # Frontend Setup and Instructions
