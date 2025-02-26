@@ -142,6 +142,12 @@ The scheduler ensures efficient order grouping and optimized delivery routes, re
 4. **reset_clusters:** this is a boolean value, if set to true it resets the clusetrs table in the database before running the morning scheduler.
 5. **reset_status:** this is a boolean value, if set to true it resets the status column in the active_requests table in the database, for testing purposes (status=0:order is still in process, status=1 order is processed and sent to store)
 
-```
+### FRONT END
+### running flow of the front end step by step:
+1. navigate to the front end folder (in terminal: cd Frontend).
+2. inside the directory, run the command: npm run dev.
+3. a Local Host link should appear,ctrl + click on it.
+
+### 
 
 
