@@ -1,4 +1,3 @@
-# database_manager.py
 import mysql.connector
 
 class DatabaseManager:
@@ -270,76 +269,7 @@ class DatabaseManager:
         except mysql.connector.Error as e:
             print(f"Error updating final price: {e}")
             self.connection.rollback()  # Rollback on error
-    '''
-    def update_combined_orders_in_db(self,orders,clusters):
 
-        self.connection = self.check_connection()
-        print(f"Updating combined orders in DB... Structure of orders: {type(orders)}")
-        print(f"Number of order groups: {len(orders)}")
-        print(f"First few order groups: {list(orders)[:3] if len(orders) >= 3 else list(orders)}")
-        
-        for order_idx, order in enumerate(orders):
-            # Get the last ID for each order explicitly
-            last_id_query = "SELECT MAX(order_id) as R FROM combined_orders"
-            result = self.execute_query(last_id_query, fetchone=True)
-            last_order_id = result['R'] if result['R'] is not None else 0
-            comb_ord_id = last_order_id + 1
-            
-            print(f"Order {order_idx+1}/{len(orders)}: Last ID = {last_order_id}, New ID = {comb_ord_id}")
-            print(f"Combining orders: {list(order)} into combined order {comb_ord_id}")
-            for clus_id in list(order):
-                if clus_id == "WareHouse":
-                    continue
-                else:
-                    curr_clus = None
-                    for cluster in clusters:
-                        print(f"Checking cluster {cluster.id} ")
-                        if int(cluster.id) == int(clus_id):
-                            print(f"Found cluster {clus_id} for order {order}")
-                            curr_clus = cluster
-                            break
-                    for ord in curr_clus.orders:
-                        print(f"Updating order {ord} to combined order {comb_ord_id}")
-                        self.update_active_order(ord,comb_ord_id)
-                        self.update_order_status(ord,1)
-                        self.update_date_of_proccessing(ord)
-    
-    def update_combined_orders_in_db(self, orders, clusters):
-        self.connection = self.check_connection()
-        print("Updating combined orders in DB...")
-        print(len(orders))
-        print("clusters size: ",len(clusters))
-        # Get the starting ID only once
-        last_id_query = "SELECT MAX(order_id) as R FROM combined_orders"
-        result = self.execute_query(last_id_query, fetchone=True)
-        base_order_id = result['R'] if result['R'] is not None else 0
-        
-        for order_idx, order in enumerate(list(orders)):
-            # Increment by the order index to ensure unique IDs
-            comb_ord_id = base_order_id + 1 + order_idx
-            
-            print(f"Combining orders: {list(order)} into combined order {comb_ord_id}")
-            
-            for clus_id in list(order):
-                if clus_id == "WareHouse":
-                    continue
-                else:
-                    curr_clus = None
-                    for cluster in clusters:
-                        print(f"Checking cluster {cluster.id} ")
-                        if int(cluster.id) == int(clus_id):
-                            print(f"Found cluster {clus_id} for order {order}")
-                            curr_clus = cluster
-                            break
-                    for ord in curr_clus.orders:
-                        print(f"Updating order {ord} to combined order {comb_ord_id}")
-                        self.update_active_order(ord, comb_ord_id)
-                        self.update_order_status(ord, 1)
-                        self.update_date_of_proccessing(ord)
-        
-        # Force a commit at the end to ensure all changes are saved
-        self.connection.commit()
-        '''
     def update_combined_orders_in_db(self, orders, clusters):
         self.connection = self.check_connection()
         print("Updating combined orders in DB with direct approach...")
@@ -421,3 +351,12 @@ class DatabaseManager:
         self.connection = self.check_connection()
         query = "UPDATE active_requests SET process_date = CURDATE() WHERE req_id = %s"
         self.execute_query( query, (ord,), commit=True)
+
+    def reset_status(self):
+        '''reset status of all orders, for testing purposes'''
+        self.connection = self.check_connection()
+        query = "UPDATE active_requests SET status = 0"
+        self.execute_query(query, commit=True)
+    
+
+    

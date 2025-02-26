@@ -3,8 +3,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, timedelta
 from typing import List, Dict
-import pandas as pd
-from sqlalchemy import create_engine, text
 from Clustering.cluster_manager import ClusterManager
 from backend.Algorithms.Dijkstra import Modified_Dijkstra
 from concurrent.futures import ThreadPoolExecutor
@@ -22,8 +20,9 @@ import signal
 version = "V1"
 radius = 1.2
 
-show_map = False
-reset_clusters = False
+show_map = True
+reset_clusters = True
+reset_status = True
 
 
 
@@ -38,21 +37,29 @@ class MultiStoreDeliveryScheduler:
         # Morning clustering job at 9 AM
         self.scheduler.add_job(
             self.process_all_stores_morning,
-            CronTrigger(hour=22, minute=11,timezone=timezone('Asia/Jerusalem'))
+            CronTrigger(hour=13 ,minute=56,timezone=timezone('Asia/Jerusalem'))
             
         )
         
         # Evening processing job at 9 PM
         self.scheduler.add_job(
             self.process_all_stores_evening,
-            CronTrigger(hour=22, minute=15,timezone=timezone('Asia/Jerusalem'))
+            CronTrigger(hour=14, minute=12,timezone=timezone('Asia/Jerusalem'))
         )
     
     
     
     def process_store_morning(self, store: Dict):
         """Process morning clustering for a single store"""
-    
+        
+        #reset clusters table in DB
+        if reset_clusters:
+            self.db_manager.reset_clusters()
+            
+        if reset_status:
+            self.db_manager.reset_status()
+
+
         print("processing morning stores")
         try:
             store_id = store['store_id']
@@ -77,16 +84,16 @@ class MultiStoreDeliveryScheduler:
                 return
             if show_map:
                 clustering.create_map()
-            # Update database with cluster assignments
-            '''
+
+            # Update database with cluster assignments and prices
             for cluster in clustering.clusters:
-                price = self.calculate_price(cluster,store_id,connection)
+                price = self.calculate_price(cluster,store_id)
                 print(f"cluster coordinates: {cluster.coordinates}")
-                self.db_manager.update_cluster(connection,store_id, cluster.id, cluster.coordinates, len(cluster.orders),price)
+                self.db_manager.update_cluster(store_id, cluster.id, cluster.coordinates, len(cluster.orders),price)
                 for req_id in cluster.orders:
-                    self.db_manager.update_cluster_id(connection,req_id,cluster.id)
-                    self.db_manager.update_final_price(connection,req_id,price)
-            '''
+                    self.db_manager.update_cluster_id(req_id,cluster.id)
+                    #self.db_manager.update_final_price(req_id,price) 
+            
 
             
             
@@ -112,7 +119,7 @@ class MultiStoreDeliveryScheduler:
             else:
                 clustering = self.stores_clusters_map[store_id]
                
-                
+            #fetch new requests and add them to already available clusters or create a new cluster for them    
             clustering.fetch_clusters()
             
             store_coordinates = self.db_manager.get_store_coordinates(store_id)
@@ -130,16 +137,14 @@ class MultiStoreDeliveryScheduler:
                 self.db_manager.update_combined_orders_in_db(orders,clustering.clusters)
             
             
-            #implement pricing method, update delivery price in DB and show for user in frontend
-            '''
+            #update delivery price in DB and show for user in frontend
+            
             for cluster in clustering.clusters:
                 price = self.calculate_price(cluster,store_id)
                 for req_id in cluster.orders:
                     self.db_manager.update_final_price(req_id,price)
-            '''
-            #reset clusters table in DB
-            if reset_clusters:
-                self.db_manager.reset_clusters()
+            
+            #reset clusters map
             del self.stores_clusters_map[store_id]
             
         except Exception as e:
@@ -153,17 +158,19 @@ class MultiStoreDeliveryScheduler:
         
             if not cluster.orders:
                 continue
+            #if cluster is not at least 1/3 full, dont send it to dijkstra
             if cluster.total_capacity < max_capacity/3:
                 for order in cluster.orders:
                     time_stamp, max_wait = self.db_manager.get_order_time(order)
                     if time_stamp is None or max_wait is None:
                         print(f"Skipping order {order} due to missing time_stamp or max_wait")
-                        continue  # Skip this order safely
+                        continue  
                 
+                    #check if orders max wait time is up and if so, send it to dijkstra
                     if not self.is_today_or_future(time_stamp,max_wait):
-                        
                         time_has_run_out = True
                         break
+
                 if time_has_run_out:
                     send_clusters.append(cluster)
                     time_has_run_out = False
@@ -172,6 +179,8 @@ class MultiStoreDeliveryScheduler:
         return send_clusters
                          
     def calculate_price(self,cluster,store):
+        """calculate the delivery price for a cluster"""
+        
         price_per_km = float(self.db_manager.get_price_for_store(store))
 
         store_coordinates = self.db_manager.get_store_coordinates(store)
@@ -183,6 +192,8 @@ class MultiStoreDeliveryScheduler:
         return (price_per_km*dist)/number_of_participants
     
     def is_today_or_future(self, timestamp, days: int) -> bool:
+        """Check if a timestamp is today or in the future, if futire returns true else false"""
+        
         # If timestamp is a string, convert it to a datetime object
         if isinstance(timestamp, str):
             original_date = datetime.strptime(timestamp, '%Y-%m-%d')
@@ -200,23 +211,20 @@ class MultiStoreDeliveryScheduler:
     
     
     def process_all_stores_morning(self):
-        """Process morning clustering for all stores in parallel"""
+        """Process morning clustering for all stores"""
+        
         print("in Process all stores morning!")
         stores = self.db_manager.get_active_stores()
         
         for store in stores:
             self.process_store_morning(store)
-            #sleep(1)  # Ensure at least 1 second between requests
-        
-        #with ThreadPoolExecutor(max_workers=min(len(stores), 10)) as executor:
-        #    executor.map(self.process_store_morning, stores)
     
     def process_all_stores_evening(self):
-        """Process evening routing for all stores in parallel"""
+        """Process evening routing for all stores"""
         stores = self.db_manager.get_active_stores()
         for store in stores:
             self.process_store_evening(store)
-            #sleep(1)  # Ensure at least 1 second between requests
+        
 
     
     def start(self):
