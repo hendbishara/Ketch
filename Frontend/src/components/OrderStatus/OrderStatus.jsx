@@ -7,7 +7,7 @@ import Card from "react-bootstrap/Card";
 const defaultOrders = [
   {
     id: "default1",
-    status: "Default Order",
+    status: "Order Listed",
     progress: 25,
     orderDate: "01/19/25",
     shop: "West Elm",
@@ -15,7 +15,7 @@ const defaultOrders = [
   },
   {
     id: "default2",
-    status: "Default Order",
+    status: "Order Processed",
     progress: 75,
     orderDate: "01/20/25",
     shop: "AllModern",
