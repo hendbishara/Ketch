@@ -90,13 +90,14 @@ const OrderStatus = () => {
               <Card.Subtitle className="text-muted mb-3">{order.shop}</Card.Subtitle>
               <ProgressBar now={order.progress} variant="success" className="mt-2" />
               <Card.Text className="text-muted mt-2">
-                Ordered on <strong>{order.orderDate}</strong>
+                {/* ✅ Change "Ordered on" or "Processed on" based on request status */}
+                {order.status === "Order Listed" ? "Ordered on" : "Processed on"} <strong>{order.orderDate}</strong>
               </Card.Text>
             </Card.Body>
           </Card>
         ))
       ) : (
-        <p style={{ width: "100%", textAlign: "center" }}></p>
+        <p style={{ width: "100%", textAlign: "center" }}>No active orders found other than the default orders.</p>
       )}
     </div>
   );
