@@ -158,6 +158,18 @@ The scheduler ensures efficient order grouping and optimized delivery routes, re
    npm run dev
    ```
 4. A **Local Host** link should appear. Press **Ctrl + Click** on it to open the frontend in your browser.
+5. Navigate to back end for front end:
+   ```sh
+   cd backend_f2d
+   ```
+6. make sure you install requirements:
+   ```sh
+   pip install -r requirements.txt
+   ```
+7. run app.py
+   ```sh
+   pyhton app.py
+   ```
 
 ## Website Instructions
 
