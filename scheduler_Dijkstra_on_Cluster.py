@@ -35,7 +35,7 @@ class MultiStoreDeliveryScheduler:
         # Morning clustering job at 9 AM
         self.scheduler.add_job(
             self.process_all_stores_morning,
-            CronTrigger(hour=18 ,minute=23,timezone=timezone('Asia/Jerusalem'))
+            CronTrigger(hour=19 ,minute=49,timezone=timezone('Asia/Jerusalem'))
             
         )
         
