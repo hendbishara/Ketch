@@ -142,6 +142,7 @@ The scheduler ensures efficient order grouping and optimized delivery routes, re
 3. **show_map:** this is a boolean value, you can set it to be true if you want the clusters to appear on a map.
 4. **reset_clusters:** this is a boolean value, if set to true it resets the clusetrs table in the database before running the morning scheduler.
 5. **reset_status:** this is a boolean value, if set to true it resets the status column in the active_requests table in the database, for testing purposes (status=0:order is still in process, status=1 order is processed and sent to store)
+6. **time_stamp_test:** this is a boolean value, if set true it will reset the time stamp of all orders in the data base to the current day for testing purposes. (otherwise orders made preiously with maximal waiting time that already expired will not be processed).
 
 
 # Frontend Setup and Instructions
@@ -152,12 +153,24 @@ The scheduler ensures efficient order grouping and optimized delivery routes, re
    ```sh
    cd Frontend
    ```
-2. Ensure that **npm** and **Vite.js** are installed in the frontend directory.
+2. Ensure that **npm** and **Vite.js** are installed in the frontend directory. and run ```npm install @react-oauth/google```.
 3. Inside the directory, start the development server by running:
    ```sh
    npm run dev
    ```
 4. A **Local Host** link should appear. Press **Ctrl + Click** on it to open the frontend in your browser.
+5. Navigate to back end for front end:
+   ```sh
+   cd backend_f2d
+   ```
+6. make sure you install requirements:
+   ```sh
+   pip install -r requirements.txt
+   ```
+7. run app.py on a different terminal in parallel:
+   ```sh
+   pyhton app.py
+   ```
 
 ## Website Instructions
 
@@ -175,4 +188,6 @@ The scheduler ensures efficient order grouping and optimized delivery routes, re
    - Once the algorithm runs and clusters are formed, new **Nearby Orders** will appear.
    - When you submit an order, it will be visible in **Order Status**.
    - Running **Dijkstra’s Algorithm** might change the status of orders(from listed to processed).
+4. **Request Order:**
+   - When Submitting a new request make sure that the item number is between 1-30 otherwise the website will return "Invalid item number", that is because in our database for now we only support items with these numbers.
 
