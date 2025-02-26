@@ -187,4 +187,6 @@ The scheduler ensures efficient order grouping and optimized delivery routes, re
    - Once the algorithm runs and clusters are formed, new **Nearby Orders** will appear.
    - When you submit an order, it will be visible in **Order Status**.
    - Running **Dijkstra’s Algorithm** might change the status of orders(from listed to processed).
+4. **Request Order:**
+   - When Submitting a new request make sure that the item number is between 1-30 otherwise the website will return "Invalid item number", that is because in our database for now we only support items with these numbers.
 
