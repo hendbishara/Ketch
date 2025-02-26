@@ -25,6 +25,7 @@ class Modified_Dijkstra:
     
     def base_algo(self):
         """base line algorithm that combines orders in each cluster, used to have a base line comparison for the huiristic calculations using the different versions of dijkstra"""
+        """creates a direct path from the warehouse to each cluster"""
         for cluster in self.clusters:
             self.orders.append(("WareHouse", cluster.id)) # Direct delivery from warehouse
             self.total_orders_capacity.append(cluster.total_capacity) # Store cluster capacity
@@ -111,7 +112,7 @@ class Modified_Dijkstra:
         self.combine_orders_V1(self.build_graph())
     
     def Dijkstra_version2(self):
-        """modified version of dijkstra that keeps track of nodes that where assigned aas parents, and does not allow 2 nodes to have the same parent unless its the warehouse
+        """modified version of dijkstra that keeps track of nodes that where assigned as parents, and does not allow 2 nodes to have the same parent unless its the warehouse
         returns a set of the combined orders"""
         #initialize graph
         self.create_graph_from_clusters()
@@ -131,8 +132,6 @@ class Modified_Dijkstra:
             #access the node's data
             u = self.g.nodes[u_id]
             
-            #print("current node ot of heap is: " + str(u_id))
-            
             for v_id in self.g.neighbors(u_id):
                 # Ensure distinct paths: if u_id` is already assigned, skip it
                 if u_id != "WareHouse":   
@@ -140,8 +139,6 @@ class Modified_Dijkstra:
                         continue
                 if v_id in visited:
                     continue
-                
-                #print("current neighbor is: " + str(v_id))
                 
                 v = self.g.nodes[v_id]  # Access the neighboring node data
                 
@@ -272,8 +269,8 @@ class Modified_Dijkstra:
     
     def combined_orders(self,bfs_graph):
         """create combined orders for version 2 and 3 of the modified dijkstra,
-        in these vesions we assume that each node can be only one a pi value which means the graph we build here is a tree where no node that
-        is not the warehouse hase an out degree > 1"""
+        in these vesions we assume that each node can be only one pi value which means the graph we build here is a tree where no node that
+        is not the warehouse has an out degree > 1"""
         
         
         # find all leaf nodes:
@@ -289,7 +286,7 @@ class Modified_Dijkstra:
             while current is not None:
                 path.append(current)
                 current = self.g.nodes[current]['pi']
-                #print(current)
+
             self.orders.append(reversed(path))
             self.total_orders_capacity.append(total_capacity)
             self.total_orders_dist.append(total_dist)
@@ -299,13 +296,11 @@ class Modified_Dijkstra:
     def combine_orders_V1(self, bfs_graph):
         """Combine orders from the modified Dijkstra version 1 where one node can be a parent to more 
         than one other node. In this combining function, we check if a node is a parent to more than one node,
-        check the loss of all its children if delivered from the warehouse directly, and choose the max(loss) to keep
-        as its child."""
+        check the loss of all its children, and choose the max(loss) to keep as its child and for the rest add a direct edge from the warehouse."""
         
         # Go over all nodes, check if out-degree > 1 
         for node in bfs_graph.nodes():
             if bfs_graph.out_degree(node) > 1:
-                #print(node)
                 # Collect modifications in a temporary list
                 modifications = []
                 
@@ -320,11 +315,13 @@ class Modified_Dijkstra:
                         max_loss = curr_loss
                         max_node = neighbor
                         continue
-
+                    
+                    #if loss of this neighbor is less than the max_loss we add a direct edge from the warehouse to tis neighbor
                     if curr_loss < max_loss:
                         modifications.append((node, neighbor, "WareHouse"))
                         self.g.nodes[neighbor]['pi'] = "WareHouse"
                     else:
+                        #add a direct edge from warehouse to prev max_node and update max node
                         if max_node is not None:
                             modifications.append((node, max_node, "WareHouse"))
                             self.g.nodes[max_node]['pi'] = "WareHouse"

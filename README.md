@@ -36,14 +36,15 @@ By integrating these components, we aim to enhance the efficiency of last-mile d
 - Orders are grouped based on **geographic proximity** and **volume constraints**.
 - A **maximum delivery capacity** is imposed to prevent inefficient resource allocation.
 ### 3️⃣ Modified Dijkstra’s Algorithm  
-We implement three variations of Dijkstra’s algorithm to identify the most efficient shared delivery routes:  
+We implement three variations of Dijkstra’s algorithm to identify the most efficient shared delivery routes, in all three versions we aim to minimise the loss function that we defined as path distance / path capacity, on each version we use a different approach for finiding a distinct path from the warehouse to each node:  
 
 | Algorithm Version | Description |
 |-------------------|------------|
-| **Version 1 (V1)** | Modified Dijkstra version 1, where the loss function is **path distance / path capacity**. To ensure distinct paths, we filter the paths when combining the orders. Returns a set of combined orders. |
+| **Version 1 (V1)** | we run a modified dijkstra were the relaxation condition is according to the new loss we defined. when combining the orders we check if a certain node (not the warehouse) has an out degree>1, we compare the loss of all its children if an edge was present directly from the warehouse. we keep the chil with max(loss from warehouse) as its child and for the rest we add a direct edge from the waregouse. returns a set of combined orders  |
 | **Version 2 (V2)** | A modified version of Dijkstra that keeps track of nodes assigned as parents. It ensures that no two nodes share the same parent, except for the warehouse. Returns a set of combined orders. |
 | **Version 3 (V3)** | This version assigns each node a parent by selecting the neighbor with the **minimal loss** among all available paths, ensuring distinct paths. Returns a set of combined orders. |
 
+**After comparing the versions using huristic calculations, taking into account the loss and run time, we can see that the performance of version 1 is the best so we chose to use it in our app**
 
 ### 4️⃣ Route Optimization & Cost Reduction
 1. **Orders are assigned to clusters** based on proximity and shared delivery potential.
@@ -66,22 +67,33 @@ We implement three variations of Dijkstra’s algorithm to identify the most eff
 - **Vite.js** – Fast build tool for frontend development.  
 - **CSS** – Styling for frontend components.  
 ---
+## 🗄️ Database Schema Overview  
 
-## 🗄️ Database Connection Guide  
-This project uses a **Railway Cloud MySQL database** for data storage. Follow these steps to connect:
+The database is hosted on **Railway Cloud** using **MySQL**, ensuring **scalability and secure data management** for shared delivery optimization. It enables tracking of **active requests, clustered deliveries, and store inventory**, ensuring an optimized routing and cost-sharing model.  
 
-### Connect Using MySQL Workbench**
-1. Open **MySQL Workbench**.
-2. Click **"New Connection"**.
+### 📌 **Key Database Tables**  
+
+- **`users`** – Stores user details, including name, email, location, and coordinates.  
+- **`stores`** – Contains store information such as name, total capacity, and delivery fees.  
+- **`items`** – Represents products available in stores, with capacity and pricing details.  
+- **`active_requests`** – Tracks ongoing delivery requests, linking users, stores, and clusters.  
+- **`request_items`** – Stores the items associated with each request.  
+- **`combined_orders`** – Groups multiple requests into a **shared delivery order**.  
+- **`clusters`** – Manages grouped orders based on **location, estimated pricing, and partner count**.  
+
+### 🔗 **Database Hosting & Connection**  
+The database is hosted on **Railway Cloud** with **MySQL**, allowing **remote access and efficient data handling**.  
+
+To connect to the database using MySQL Workbench:  
+1. Open **MySQL Workbench**.  
+2. Click **"New Connection"**.  
 3. Enter the following details:  
-   - **Connection Name**: `Railway MySQL`  
    - **Hostname**: `turntable.proxy.rlwy.net`  
    - **Port**: `21931`  
    - **Username**: `root`  
    - **Password**: `QidNZDIznmxgXewmxVnbzMVkFVZoyHZs`  
    - **Default Schema (Optional)**: `railway`  
-4. Click **"Test Connection"**.
-5. If the test is successful, click **OK**.
+4. Click **"Test Connection"** → **OK** if successful.  
 
 
 ## 📊 Algorithm Analyzer & Dijkstra Heuristics  
@@ -94,16 +106,16 @@ The **Algorithm Analyzer** evaluates the performance of the **Modified Dijkstra 
 
 ### 📂 Results & Reports  
 The results are saved in:  
-- 📊 **Excel (`algorithm_analysis_results.xlsx`)** – Contains detailed data for further analysis.  
+- 📊 **Excel (`algorithm_analysis_results.xlsx`)** – Contains detailed data for running the different versions of dijkstra on 100 clusters.  
 - 📄 **PDF Reports**:  
-  - **`algorithm_analysis.pdf`** – General performance analysis.  
-  - **`algorithm_analysis_50.pdf`** – Analysis for 50 clusters.  
-  - **`dijkstra_huristics.pdf`** – Evaluates different Dijkstra versions.  
-  - **`algorithm_analysis.xlsx`** – Includes real-world analysis of **100 orders**.  
+  - **`algorithm_analysis.pdf`** – Graph analysis of the data obtained fron runing the different versions of dijkstra on 100 clusters (generated when runing dijkstra_huristics.py).  
+  - **`algorithm_analysis_50.pdf`** – Graph analysis of the data obtained fron runing the different versions of dijkstra on 50 clusters (generated when runing dijkstra_huristics.py).   
 
 ### 🏃 Running the Heuristics Analysis  
 If you want to see how the **different Dijkstra versions** work with real examples, run:  
 ```sh
 python dijkstra_huristics.py
+
+
 
 
