@@ -116,6 +116,32 @@ If you want to see how the **different Dijkstra versions** work with real exampl
 ```sh
 python dijkstra_huristics.py
 
+```
+## 🛠️ MultiStoreDeliveryScheduler
+The **MultiStoreDeliveryScheduler** is responsible for handling scheduled clustering and routing jobs for deliveries. The scheduler executes two primary jobs every day:
+- **Morning Clustering Job:** Runs at **9:00 AM**, grouping orders into clusters based on location and store capacity.
+- **Evening Routing Job:** Runs at **9:00 PM**, adds new orders to clusters and optimizes delivery routes for the clusters using a modified Dijkstra algorithm.
 
+### **Important Note for Running the Scheduler**
+If you manually trigger the scheduler or adjust its timing, ensure that there is a **20-minute gap** between the morning clustering job and the evening routing job. This delay allows all clustering processes to complete before routing begins, ensuring the algorithm functions correctly and preventing data inconsistencies.
+
+### Running the Scheduler
+To run the **MultiStoreDeliveryScheduler**, follow these steps:
+1. **Install Dependencies:** Ensure required packages are installed (`pip install -r requirements.txt`).
+2. **Manually set Time:** update setup_scheduler function.
+3. **Start the Scheduler:** Run the script (`python MultiStoreDeliveryScheduler.py`).
+4. **Monitor Logs:** Check the terminal output or logs for job execution details.
+5. **Shutdown the Scheduler:** Use **Ctrl+C** or terminate the process to stop the scheduler gracefully.
+
+The scheduler ensures efficient order grouping and optimized delivery routes, reducing costs and improving delivery efficiency.
+
+### setting global parameters for the scheduler
+1. **version:** you can set the dijkstra version here, we set the default value to V1.
+2. **radius:** this is the maximum radius for each cluster, you can manually change this value.
+3. **show_map:** this is a boolean value, you can set it to be true if you want the clusters to appear on a map.
+4. **reset_clusters:** this is a boolean value, if set to true it resets the clusetrs table in the database before running the morning scheduler.
+5. **reset_status:** this is a boolean value, if set to true it resets the status column in the active_requests table in the database, for testing purposes (status=0:order is still in process, status=1 order is processed and sent to store)
+
+```
 
 
