@@ -152,7 +152,7 @@ The scheduler ensures efficient order grouping and optimized delivery routes, re
    ```sh
    cd Frontend
    ```
-2. Ensure that **npm** and **Vite.js** are installed in the frontend directory.
+2. Ensure that **npm** and **Vite.js** are installed in the frontend directory. and run ```npm install @react-oauth/google```.
 3. Inside the directory, start the development server by running:
    ```sh
    npm run dev
