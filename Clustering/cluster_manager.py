@@ -6,10 +6,10 @@ import folium
 import webbrowser
 import os
 import numpy as np
-
-               
+            
 class Cluster:
     def __init__(self, centroid, first_order_id, first_order_capacity, cluster_id):
+        '''Initializes a new cluster with the first order'''
         self.id = cluster_id  # Assign global cluster ID
         self.orders = {first_order_id}  # Set of order IDs in this cluster
         self.coordinates = centroid  # Centroid (coordinates of the first order)
@@ -19,10 +19,10 @@ class Cluster:
         """ Adds an order to the cluster if it fits the criteria """
         self.orders.add(order_id)
         self.total_capacity += order_capacity  
-
-
+    
 class ClusterManager:
     def __init__(self, radius_km, max_capacity,store_id, db_manager: DatabaseManager):
+        """Initializes a new ClusterManager object"""
         self.radius_km = radius_km
         self.max_capacity = max_capacity  # Maximum capacity constraint
         self.clusters = []  # List of Cluster objects
@@ -32,9 +32,9 @@ class ClusterManager:
 
     def build_clusters(self):
         """ Builds clusters from scratch based on existing orders """
-        orders = self.db_manager.get_all_orders(self.store_id)  or [] # Fetch all orders
+        orders = self.db_manager.get_all_orders(self.store_id)  or [] # Fetch all orders from the database
     
-        self.clusters = []  # Reset clusters
+        self.clusters = []  # Reset clusters 
         self.global_cluster_id = 1  # Reset global cluster ID
 
         for order in orders:
@@ -42,8 +42,8 @@ class ClusterManager:
             user_id = order['user_id']  # Extract order ID and user ID
             print(f"Processing order {req_id} for user {user_id}")
 
-            # Fetch user coordinates (latitude, longitude)
-            user_coordinates = self.db_manager.get_user_coordinates(user_id)
+            
+            user_coordinates = self.db_manager.get_user_coordinates(user_id) # Fetch user coordinates (latitude, longitude)
             if not user_coordinates:
                 continue  # Skip if user has no coordinates
             
@@ -61,7 +61,7 @@ class ClusterManager:
             if cluster.total_capacity + order_capacity > self.max_capacity:
                 continue  # Skip cluster if adding the order exceeds max capacity
             
-            distance = geodesic(order_coord, cluster.coordinates).km
+            distance = geodesic(order_coord, cluster.coordinates).km # Calculate distance between order and cluster centroid
             print(f"Distance from order {order_id} to cluster {cluster.id}: {distance} km")
 
             if distance <= self.radius_km:
@@ -78,6 +78,7 @@ class ClusterManager:
             print(f"Created new cluster {new_cluster.id} for order {order_id}")
 
     def get_clusters(self):
+        """ Returns the list of clusters """
         return self.clusters
     
     def fetch_clusters(self):
@@ -97,6 +98,7 @@ class ClusterManager:
                 self.add_order_to_cluster(req['req_id'], order_coord, cap)
 
     def create_map(self):
+        """ Creates a map with clusters and orders """
         if not self.clusters:
             print("No clusters available to create a map.")
             return
@@ -109,7 +111,7 @@ class ClusterManager:
         # Iterate through each cluster to add markers and lines
         for cluster in self.clusters:
             if cluster.coordinates:
-                # ✅ Add a red circle marker for the cluster centroid
+                # Add a red circle marker for the cluster centroid
                 folium.CircleMarker(
                     location=cluster.coordinates,
                     radius=10,  # Bigger for better visibility
@@ -120,7 +122,7 @@ class ClusterManager:
                     popup=f"Cluster ID: {cluster.id}\nTotal Capacity: {cluster.total_capacity}"
                 ).add_to(map_obj)
 
-            # ✅ Add green markers for orders and draw lines to the centroid
+            # Add green markers for orders and draw lines to the centroid
             for order_id in cluster.orders:
                 # Fetch user ID from the order
                 user_id = self.db_manager.get_user_id_from_order(order_id)
@@ -132,14 +134,14 @@ class ClusterManager:
                 if not user_coord:
                     continue
 
-                # ✅ Add green marker for the user's address
+                # Add green marker for the user's address
                 folium.Marker(
                     location=user_coord,  
                     popup=f"Order ID: {order_id}\nCoordinates: {user_coord}",
                     icon=folium.Icon(color='green', icon='cloud', prefix='fa')
                 ).add_to(map_obj)
 
-                # ✅ Draw a line between the order and the cluster centroid
+                # Draw a line between the order and the cluster centroid
                 folium.PolyLine(
                     [user_coord, cluster.coordinates],  # Order → Centroid
                     color="blue",
@@ -147,7 +149,7 @@ class ClusterManager:
                     opacity=0.8
                 ).add_to(map_obj)
 
-        # ✅ Save and open the map
+        # Save and open the map
         map_path = os.path.join(os.getcwd(), "cluster_map.html")
         map_obj.save(map_path)
         print(f"Map has been saved as '{map_path}'.")
