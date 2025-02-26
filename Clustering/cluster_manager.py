@@ -9,33 +9,26 @@ import numpy as np
 
                
 class Cluster:
-
     def __init__(self, centroid, first_order_id, first_order_capacity, cluster_id):
         self.id = cluster_id  # Assign global cluster ID
         self.orders = {first_order_id}  # Set of order IDs in this cluster
         self.coordinates = centroid  # Centroid (coordinates of the first order)
-        self.coordinates = centroid  # Centroid (coordinates of the first order)
         self.total_capacity = first_order_capacity  # Total capacity of orders in this cluster
-        #self.max_capacity = 20  # Maximum capacity constraint
-        #self.radius_km = 1  # Radius in kilometers
 
     def add_order(self, order_id, order_capacity):
         """ Adds an order to the cluster if it fits the criteria """
         self.orders.add(order_id)
-        self.total_capacity += order_capacity  # Increase total capacity
+        self.total_capacity += order_capacity  
 
 
 class ClusterManager:
-
-    
     def __init__(self, radius_km, max_capacity,store_id, db_manager: DatabaseManager):
         self.radius_km = radius_km
-        #self.max_capacity = 1000
         self.max_capacity = max_capacity  # Maximum capacity constraint
         self.clusters = []  # List of Cluster objects
         self.store_id = store_id
         self.global_cluster_id = 1  # Global counter for cluster IDs
-        self.db_manager = db_manager
+        self.db_manager = db_manager # Database manager object
 
     def build_clusters(self):
         """ Builds clusters from scratch based on existing orders """
@@ -48,6 +41,7 @@ class ClusterManager:
             req_id=order['req_id'] 
             user_id = order['user_id']  # Extract order ID and user ID
             print(f"Processing order {req_id} for user {user_id}")
+
             # Fetch user coordinates (latitude, longitude)
             user_coordinates = self.db_manager.get_user_coordinates(user_id)
             if not user_coordinates:
@@ -89,18 +83,18 @@ class ClusterManager:
     def fetch_clusters(self):
         """fetch new requests and add them to already available clusters or create a new cluster for them"""
         print("curr cluster counter: " + str(self.global_cluster_id))
+
         requests = self.db_manager.get_requests(self.store_id)
+
         for req in requests:
             req_id = req['req_id']
             clus_id = req['cluster_id']
             cap = self.db_manager.get_order_capacity(req_id)
+
             if clus_id == -1:
                 order_coord = self.db_manager.get_user_coordinates(req['user_id'])
                 cap = self.db_manager.get_order_capacity(req['req_id'])
                 self.add_order_to_cluster(req['req_id'], order_coord, cap)
-
-            
-
 
     def create_map(self):
         if not self.clusters:
