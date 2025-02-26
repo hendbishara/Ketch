@@ -15,16 +15,13 @@ from pytz import timezone
 from geopy.distance import geodesic
 from time import sleep
 import signal
-
+import traceback
 
 version = "V1"
 radius = 1.2
-
 show_map = True
 reset_clusters = True
 reset_status = True
-
-
 
 class MultiStoreDeliveryScheduler:
     def __init__(self):
@@ -55,7 +52,7 @@ class MultiStoreDeliveryScheduler:
         #reset clusters table in DB
         if reset_clusters:
             self.db_manager.reset_clusters()
-            
+
         if reset_status:
             self.db_manager.reset_status()
 
@@ -99,8 +96,6 @@ class MultiStoreDeliveryScheduler:
             
         except Exception as e:
             print(f"Error processing store {store_id} morning clustering: {e}")
-            # Implement error handling and notifications
-            import traceback
             print(f"Error processing store {store_id} morning clustering: {str(e)}")
             print(traceback.format_exc()) # Print the full traceback for debugging
     
@@ -239,7 +234,7 @@ class MultiStoreDeliveryScheduler:
         
     def stop(self):
         self.scheduler.shutdown()
-
+    
     
 
 # Usage example:
@@ -253,3 +248,6 @@ if __name__ == "__main__":
     except (KeyboardInterrupt, SystemExit):
         print("Scheduler shutting down...")
         scheduler.stop()
+
+
+
