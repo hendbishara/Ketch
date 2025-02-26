@@ -119,8 +119,7 @@ class DatabaseManager:
             print(f"Updating cluster {id} with Latitude: {latitude}, Longitude: {longitude}")
             
             query = """INSERT INTO clusters (store_id, cluster_id, latitude, longitude, partners_number, expected_price) 
-                    VALUES (%s, %s, %s,%s,%s,%s) 
-                    ON DUPLICATE KEY UPDATE latitude = VALUES(latitude), longitude = VALUES(longitude),partners_number = VALUES(partners_number),expected_price = VALUES(expected_price)"""
+                    VALUES (%s, %s, %s,%s,%s,%s) """
             
             self.execute_query(query, (store_id,id, latitude, longitude,partners_number,expected_price), commit=True)
             
@@ -358,5 +357,8 @@ class DatabaseManager:
         query = "UPDATE active_requests SET status = 0"
         self.execute_query(query, commit=True)
     
+    def update_time_stamp(self):
+        self.connection = self.check_connection()
+        query = "UPDATE active_requests SET time_stamp = CURRENT_DATE"
+        self.execute_query(query, commit=True)
 
-    

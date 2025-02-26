@@ -22,6 +22,7 @@ radius = 1.2
 show_map = True
 reset_clusters = True
 reset_status = True
+time_stamp_test = True
 
 class MultiStoreDeliveryScheduler:
     def __init__(self):
@@ -34,29 +35,19 @@ class MultiStoreDeliveryScheduler:
         # Morning clustering job at 9 AM
         self.scheduler.add_job(
             self.process_all_stores_morning,
-            CronTrigger(hour=13 ,minute=56,timezone=timezone('Asia/Jerusalem'))
+            CronTrigger(hour=18 ,minute=23,timezone=timezone('Asia/Jerusalem'))
             
         )
         
         # Evening processing job at 9 PM
         self.scheduler.add_job(
             self.process_all_stores_evening,
-            CronTrigger(hour=14, minute=12,timezone=timezone('Asia/Jerusalem'))
+            CronTrigger(hour=18, minute=39,timezone=timezone('Asia/Jerusalem'))
         )
-    
-    
     
     def process_store_morning(self, store: Dict):
         """Process morning clustering for a single store"""
         
-        #reset clusters table in DB
-        if reset_clusters:
-            self.db_manager.reset_clusters()
-
-        if reset_status:
-            self.db_manager.reset_status()
-
-
         print("processing morning stores")
         try:
             store_id = store['store_id']
@@ -204,10 +195,17 @@ class MultiStoreDeliveryScheduler:
         # Compare the new date with today
         return new_date.date() > today                  
     
-    
     def process_all_stores_morning(self):
         """Process morning clustering for all stores"""
-        
+        if reset_clusters:
+            self.db_manager.reset_clusters()
+
+        if reset_status:
+            self.db_manager.reset_status()
+
+        if time_stamp_test:
+            self.db_manager.update_time_stamp()
+
         print("in Process all stores morning!")
         stores = self.db_manager.get_active_stores()
         
@@ -219,9 +217,7 @@ class MultiStoreDeliveryScheduler:
         stores = self.db_manager.get_active_stores()
         for store in stores:
             self.process_store_evening(store)
-        
-
-    
+           
     def start(self):
         self.scheduler.start()
         signal.signal(signal.SIGINT, self.shutdown)
