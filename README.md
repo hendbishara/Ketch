@@ -1,5 +1,6 @@
 # Ketch
 # 📦 Shared Delivery Optimization Using a Modified Dijkstra Algorithm
+**there is a demo video available in the repostory under the name "demo".**
 
 ## 📝 Project Overview
 This project focuses on optimizing **shared delivery routes** to reduce transportation costs and improve efficiency. By leveraging **a modified version of Dijkstra’s algorithm**, we calculate the most cost-effective and shortest delivery paths while clustering nearby orders.
@@ -142,12 +143,36 @@ The scheduler ensures efficient order grouping and optimized delivery routes, re
 4. **reset_clusters:** this is a boolean value, if set to true it resets the clusetrs table in the database before running the morning scheduler.
 5. **reset_status:** this is a boolean value, if set to true it resets the status column in the active_requests table in the database, for testing purposes (status=0:order is still in process, status=1 order is processed and sent to store)
 
-### FRONT END
-### running flow of the front end step by step:
-1. navigate to the front end folder (in terminal: cd Frontend).
-2. inside the directory, run the command: npm run dev.
-3. a Local Host link should appear,ctrl + click on it.
 
-### 
+# Frontend Setup and Instructions
 
+## Running the Frontend Step by Step
+
+1. Navigate to the frontend folder in the terminal:
+   ```sh
+   cd Frontend
+   ```
+2. Ensure that **npm** and **Vite.js** are installed in the frontend directory.
+3. Inside the directory, start the development server by running:
+   ```sh
+   npm run dev
+   ```
+4. A **Local Host** link should appear. Press **Ctrl + Click** on it to open the frontend in your browser.
+
+## Website Instructions
+
+1. **Login with Google:**
+   - Logging in with your Google account is required to request an order.
+   - Your location in the database will be saved as your current login location.
+ 
+2. **Store Locations and User Settings:**
+   - The site has **four stores**, all located in **New York**.
+   - Upon logging in, you can change your location by providing **longitude** and **latitude**.
+   - For the algorithm to function correctly, set your location to **New York**, as currently active requests and users in the database are based there. Otherwise, you may not see nearby orders.
+     
+3. **Order Status and Nearby Orders:**
+   - Default orders are already available in **Order Status** and **Nearby Orders** so you can see how the site functions.
+   - Once the algorithm runs and clusters are formed, new **Nearby Orders** will appear.
+   - When you submit an order, it will be visible in **Order Status**.
+   - Running **Dijkstra’s Algorithm** might change the status of orders(from listed to processed).
 
